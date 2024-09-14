@@ -62,7 +62,10 @@ class PutVastDB(FlowFileTransform):
 
         self.incoming_data_type = PropertyDescriptor(
             name="Data Type",
-            description="Data Type",
+            description=(
+                "Data Type.  Parquet or Json.\n"
+                "If Json, each data row must be on one line terminated by a newline character."
+            ),
             allowable_values=["Parquet", "Json"],
             required=True,
             default_value="Parquet",
@@ -175,18 +178,6 @@ class PutVastDB(FlowFileTransform):
                 table.add_column(column)
 
             table.insert(pa_table)
-
-        # record_batches = pa_table.to_batches(max_chunksize=batch_size)
-
-        # failed_batches = []
-        # for batch in record_batches:
-        #     try:
-        #         table.insert(batch)
-        #     except Exception as e:
-        #         self.logger.info(f"Failed to insert batch: {e}")
-        #         failed_batches.append(batch.to_pylist)
-        #
-        # return failed_batches
 
     def get_columns_to_add(self, existing_schema, desired_schema):
         """
