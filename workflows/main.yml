@@ -1,0 +1,40 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.9", "3.10", "3.11"]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install hatch
+    - name: Check Formatting
+      run: hatch fmt --check
+    - name: Build
+      run: hatch build -t custom
+    - name: Get NAR filename
+      id: get_nar_filename
+      run: |
+        nar_filename=$(basename $(ls dist/*.nar)) # Extract only the filename
+        echo "nar_filename=${nar_filename}" >> $GITHUB_OUTPUT
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.get_nar_filename.outputs.nar_filename }}
+        path: dist/*.nar

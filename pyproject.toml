@@ -1,0 +1,104 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "vastdb-nifi"
+dynamic = ["version"]
+description = 'VastDB NiFi Processors.'
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+keywords = []
+authors = [
+  { name = "Chris Snow", email = "chris.snow@vastdata.com" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = [
+  "pyarrow", "vastdb"
+]
+
+[project.urls]
+Documentation = "https://github.com/vast-data/vastdb_nifi#readme"
+Issues = "https://github.com/vast-data/vastdb_nifi/issues"
+Source = "https://github.com/vast-data/vastdb_nifi"
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+  "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/vastdb_nifi tests}"
+
+[tool.coverage.run]
+source_pkgs = ["src/vastdb_nifi", "tests"]
+branch = true
+parallel = true
+omit = [
+  "src/vastdb_nifi/__about__.py",
+]
+
+[tool.coverage.paths]
+vastdb_nifi = ["src/vastdb_nifi", "*/vastdb-nifi/src/vastdb_nifi"]
+tests = ["tests", "*/vastdb-nifi/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
+
+[tool.hatch.build.hooks.custom]
+path = "hatch_build.py"
+
+[tool.hatch.build.targets.custom]
+exclude = [
+  "hatch_build.py",
+  ".gitignore",
+  ".github/",
+]
+
+[tool.hatch.build.targets.custom.force-include]
+"src/vastdb_nifi/processors/PutVastDB.py" = "PutVastDB.py"
+"src/vastdb_nifi/processors/ImportVastDB.py" = "ImportVastDB.py"
+"src/vastdb_nifi/processors/DropVastDBTable.py" = "DropVastDBTable.py"
+"src/vastdb_nifi/processors/_version.py" = "_version.py"
+
+[tool.ruff]
+preview = true
+lint.pep8-naming.extend-ignore-names = [
+    "flowFile",
+    "getPropertyDescriptors",
+    "onScheduled",
+]
+lint.flake8-self.extend-ignore-names = [
+    "_standard_validators"
+]
+lint.extend-select = [
+    "CPY001"
+]
+lint.ignore = [
+    "G004", # Allow f-string for logging
+    "N999", # Allow Processor module names that do not follow pep8-naming
+    "PERF401", # Allow manual list comprehension
+    "RUF012", # Allow mutable class attributes without typing.ClassVar
+    "S105", # Avoid checking for hardcoded-password-string values
+]
+
+[tool.ruff.lint.flake8-copyright]
+notice-rgx = "# SPDX-License-Identifier: MIT\n"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/vastdb_nifi/processors/_version.py"
