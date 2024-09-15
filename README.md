@@ -26,8 +26,8 @@ This is a **community supported** project containing NiFi 2.0.0 Python Processor
 
 ### Features
 
-- automatic schema and table creation
-- automatic schema discovery and table evolution
+- automatic database schema and table creation
+- automatic table schema discovery and table evolution
 
 ## Installation
 
