@@ -24,6 +24,11 @@ This is a **community supported** project containing NiFi 2.0.0 Python Processor
 - **ImportVastDB**: Imports parquet files from Vast S3
 - **PutVastDB**: Writes Parquet or JSON data to a Vast DataBase Table
 
+### Features
+
+- automatic schema and table creation
+- automatic schema discovery and table evolution
+
 ## Installation
 
  - [NiFi Standard 2.0.0-M4](https://nifi.apache.org/download/) [or later] installed ([install docs](https://nifi.apache.org/docs/nifi-docs/html/getting-started.html#downloading-and-installing-nifi)).  The installation directory will be referred to as `$NIFI_HOME`.
