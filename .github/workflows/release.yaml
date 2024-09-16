@@ -32,7 +32,7 @@ jobs:
 
       - name: Check if tag already exists
         id: check_tag
-        uses: mukunku/tag-exists-action@v1.3.1
+        uses: mukunku/tag-exists-action@v1.6.0
         with:
           tag: ${{ github.ref_name }}
 
