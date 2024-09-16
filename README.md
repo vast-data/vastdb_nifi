@@ -1,4 +1,4 @@
-# VastDB NiFi
+# VastDB NiFi 2.x Processors
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/vast-data/vastdb_nifi?style=flat-square)](https://github.com/vast-data/vastdb_nifi/releases)
 [![Build Status](https://github.com/vast-data/vastdb_nifi/actions/workflows/main.yml/badge.svg)](https://github.com/vast-data/vastdb_nifi/actions/workflows/main.yml)
@@ -7,6 +7,7 @@
 [![code style: ruff](https://img.shields.io/badge/code%20style-ruff-4B4483.svg)](https://github.com/astral-sh/ruff)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub issues](https://img.shields.io/github/issues/vast-data/vastdb_nifi)](https://github.com/vast-data/vastdb_nifi/issues)
+[![Hatch project](https://img.shields.io/badge/%F0%9F%A5%9A-Hatch-4051b5.svg)](https://github.com/pypa/hatch)
 
 -----
 
@@ -24,10 +25,12 @@ This is a **community supported** project containing NiFi 2.0.0 Python Processor
 - **ImportVastDB**: Imports parquet files from Vast S3
 - **PutVastDB**: Writes Parquet or JSON data to a Vast DataBase Table
 
+Detailed documenation for the processors can be found [here](./docs/PROCESSORS.md)
+
 **Features**
 
-- automatic database schema and table creation
-- automatic table schema discovery and table evolution
+- Automatic database schema creation and table creation
+- Automatic table schema discovery and table evolution
 
 ## Installation
 
@@ -38,4 +41,4 @@ This is a **community supported** project containing NiFi 2.0.0 Python Processor
 
 ## License
 
-`vastdb-nifi` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.
+`vastdb_nifi` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.
