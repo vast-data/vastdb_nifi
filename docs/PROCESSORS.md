@@ -49,3 +49,4 @@
 {"a": 1, "b": 2.0, "c": "foo", "d": false}
 {"a": 4, "b": -5.5, "c": null, "d": true}
 ```
+   * **Note:** Processors with *Record Writers* can use the [JsonRecordSetWriter](https://nifi.apache.org/docs/nifi-docs/components/org.apache.nifi/nifi-record-serialization-services-nar/2.0.0-M4/org.apache.nifi.json.JsonRecordSetWriter/index.html) that has the **Output Grouping** property set to **One Line Per Object** will create the FlowFile with the correct format.
