@@ -19,7 +19,7 @@ class ImportVastDB(FlowFileTransform):
 
     class ProcessorDetails:
         dependencies = ["vastdb", "pyarrow"]
-        version = "0.0.21.dev0+g5f06b21.d20240914"  # auto generated - do not edit
+        version = "{{version}}"  # auto generated - do not edit
         tags = ["vastdb", "arrow"]
         description = """Imports parquet files from Vast S3."""
 

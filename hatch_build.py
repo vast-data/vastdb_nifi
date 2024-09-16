@@ -8,6 +8,7 @@ import os
 import platform
 import re
 import sys
+import tempfile
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
@@ -127,10 +128,17 @@ class CustomBuilder(BuilderInterface):
         with NarBundle.open_bundle(target_nar) as nar:
             nar.write_manifest(self.metadata)
 
-            for included_file in self.recurse_included_files():
-                included_file_path = Path(included_file.path)
-                self.process_processor_file(included_file_path)
-                nar.add_entry(included_file_path, included_file.distribution_path)
+            with tempfile.TemporaryDirectory() as temp_dir:  # Create temporary directory
+                for included_file in self.recurse_included_files():
+                    included_file_path = Path(included_file.path)
+                    modified_content = self.process_processor_file(included_file_path)
+
+                    # Create a temporary file in the temporary directory
+                    temp_file_path = os.path.join(temp_dir, os.path.basename(included_file.path))
+                    with open(temp_file_path, "w") as temp_file:
+                        temp_file.write(modified_content)
+
+                    nar.add_entry(temp_file_path, included_file.distribution_path)
 
             if self.metadata.core.dependencies:
                 self.app.display_waiting("Processing dependencies...")
@@ -138,8 +146,8 @@ class CustomBuilder(BuilderInterface):
 
         return os.fspath(target_nar)
 
-    def process_processor_file(self, file_path: Path):
-        """Processes a processor file to replace version placeholders."""
+    def process_processor_file(self, file_path: Path) -> str:
+        """Processes a processor file to replace version placeholders and returns the modified content."""
         from src.vastdb_nifi.processors._version import __version__
 
         with open(file_path) as f:
@@ -153,8 +161,7 @@ class CustomBuilder(BuilderInterface):
                 flags=re.MULTILINE,
             )
 
-        with open(file_path, "w") as f:
-            f.write(content)
+        return content
 
     def process_dependencies(self, build_directory: str, nar: NarBundle) -> None:
         nar_inf_dir = "NAR-INF"
