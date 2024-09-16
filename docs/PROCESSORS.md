@@ -21,7 +21,7 @@
         * **Union** This schema merge function returns a unified schema from potentially two different schemas.
         * **Strict** This schema merge function validates two Schemas are identical.
         * **Child** This schema merge function validates a schema is contained in another schema.
-   * **Incoming Data Requirements:** The incoming FlowFile's content must be a JSON array. You can use the [JsonRecordSetWriter](https://nifi.apache.org/docs/nifi-docs/components/org.apache.nifi/nifi-record-serialization-services-nar/2.0.0-M4/org.apache.nifi.json.JsonRecordSetWriter/index.html) with the **Output Grouping** property set to **Array**. Each element in the array is a JSON object with the following keys:
+   * **Incoming Data Requirements:** The incoming FlowFile's content must be a JSON array with each element in the array is a JSON object with the following keys:
         * **key:** The S3 key (path) to the Parquet file.
         * **bucket:** The S3 bucket where the Parquet file is located.
 	
@@ -33,6 +33,7 @@
         {"key": "path/to/file2.parquet", "bucket": "my-vast-bucket"}
     ]
 ```
+   * **Note:** The [ListS3](https://nifi.apache.org/docs/nifi-docs/components/org.apache.nifi/nifi-aws-nar/2.0.0-M4/org.apache.nifi.processors.aws.s3.ListS3/index.html) processor configured with a [JsonRecordSetWriter](https://nifi.apache.org/docs/nifi-docs/components/org.apache.nifi/nifi-record-serialization-services-nar/2.0.0-M4/org.apache.nifi.json.JsonRecordSetWriter/index.html) that has the **Output Grouping** property set to **Array** will create the FlowFile with the correct content and format.
 
 ### **PutVastDB**
    * **Description:** Publishes Parquet or JSON data to a VastDB table.
