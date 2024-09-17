@@ -107,9 +107,7 @@ class PutVastDB(FlowFileTransform):
             op: isnull
         """
 
-        context = {}  # No dynamic constants needed in this example
-
-        ibis_expr = parse_yaml_predicate(yaml_predicate, context)
+        ibis_expr = parse_yaml_predicate(yaml_predicate)
 
         with session.transaction() as tx:
             bucket: vastdb.bucket.Bucket = tx.bucket(vastdb_bucket)
