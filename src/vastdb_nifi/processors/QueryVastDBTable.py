@@ -150,7 +150,20 @@ class QueryVastDBTable(FlowFileTransform):
             schema: vastdb.schema.Schema = bucket.schema(vastdb_schema, fail_if_missing=True)
             table: vastdb.table.Table = schema.table(vastdb_table, fail_if_missing=True)
 
-            reader = table.select(columns=vastdb_column_list, predicate=ibis_expr)
-            table = reader.read_all()
-            df = table.to_pandas()
-            return df.to_json(orient="records")
+            log_message = (
+                f"Selecting from table '{table.name}' columns '{vastdb_column_list}' "
+                f"with yaml: '{vastdb_predicate}' translated to ibis '{ibis_expr!s}'"
+            )
+            self.logger.info(log_message)
+
+            try:
+                reader = table.select(columns=vastdb_column_list, predicate=ibis_expr)
+                table = reader.read_all()
+                df = table.to_pandas()
+                return df.to_json(orient="records")
+            except Exception as e:
+                error_message = (
+                    f"Error from table '{table.name}' columns '{vastdb_column_list}' "
+                    f"with yaml: '{vastdb_predicate}' translated to ibis '{ibis_expr!s}': {e}"
+                )
+                raise RuntimeError(error_message) from e

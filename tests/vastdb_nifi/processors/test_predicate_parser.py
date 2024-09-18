@@ -14,7 +14,17 @@ def test_single_column_predicate():
       value: 2
     """
     ibis_expr = parse_yaml_predicate(yaml_predicate)
-    assert "extra > 2" in str(ibis_expr)
+    assert str(ibis_expr) == "(_['extra'] > 2)"
+
+
+def test_integer_value_predicate():
+    yaml_predicate = """
+    - column: vendor_id
+      op: "=="
+      value: 3
+    """
+    ibis_expr = parse_yaml_predicate(yaml_predicate)
+    assert str(ibis_expr) == "(_['vendor_id'] == 3)"
 
 
 def test_empty_operator():

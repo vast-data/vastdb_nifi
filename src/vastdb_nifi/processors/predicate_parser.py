@@ -16,13 +16,14 @@ def parse_yaml_predicate(yaml_str):
         data = data[0]
 
     def build_expression(predicate):
+        from ibis import _  # Import the _ placeholder
+
         if isinstance(predicate, dict):
             if "and" in predicate:
                 return ibis.and_(*[build_expression(p) for p in predicate["and"]])
             if "or" in predicate:
                 return ibis.or_(*[build_expression(p) for p in predicate["or"]])
 
-            # Handle single column predicate without 'and' or 'or'
             column = predicate["column"]
             op = predicate.get("op")
             value = predicate["value"]
@@ -41,19 +42,19 @@ def parse_yaml_predicate(yaml_str):
                 error_message = f"Unsupported operator: {op}. Predicate: {predicate}"
                 raise ValueError(error_message)
 
-            table = ibis.table([(column, infer_type(value))])
+            # Use the _ placeholder to build expressions
+            column_expr = _[column]
 
             if op == "isin":
-                return table[column].isin(value)
+                return column_expr.isin(value)
             if op == "isnull":
-                return table[column].isnull()
+                return column_expr.isnull()
             if op == "contains":
-                return table[column].contains(value)
+                return column_expr.contains(value)
 
-            # Use operator mapping for comparison operators
             op_map = {">": "__gt__", ">=": "__ge__", "<": "__lt__", "<=": "__le__", "==": "__eq__", "!=": "__ne__"}
             if op in op_map:
-                return getattr(table[column], op_map[op])(value)
+                return getattr(column_expr, op_map[op])(value)
 
             error_message = f"Unhandled operator: {op}.  Predicate: {predicate}"
             raise ValueError(error_message)
