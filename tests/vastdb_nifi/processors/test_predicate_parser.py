@@ -6,6 +6,18 @@ import pytest
 
 from vastdb_nifi.processors.predicate_parser import parse_yaml_predicate
 
+def test_datestring():
+    yaml_predicate = """
+    and:
+    - column: tpep_pickup_datetime
+      op: ">="
+      value: "20120101"
+    - column: tpep_pickup_datetime
+      op: "<="
+      value: "20120110"
+    """
+    ibis_expr = parse_yaml_predicate(yaml_predicate)
+    assert repr(ibis_expr) == "((_['tpep_pickup_datetime'] >= '20120101') & (_['tpep_pickup_datetime'] <= '20120110'))"
 
 def test_single_column_predicate():
     yaml_predicate = """
@@ -14,8 +26,7 @@ def test_single_column_predicate():
       value: 2
     """
     ibis_expr = parse_yaml_predicate(yaml_predicate)
-    assert str(ibis_expr) == "(_['extra'] > 2)"
-
+    assert repr(ibis_expr) == "(_['extra'] > 2)"
 
 def test_integer_value_predicate():
     yaml_predicate = """
@@ -24,7 +35,7 @@ def test_integer_value_predicate():
       value: 3
     """
     ibis_expr = parse_yaml_predicate(yaml_predicate)
-    assert str(ibis_expr) == "(_['vendor_id'] == 3)"
+    assert repr(ibis_expr) == "(_['vendor_id'] == 3)"
 
 
 def test_empty_operator():
