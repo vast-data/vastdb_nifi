@@ -31,7 +31,9 @@ and:
 * `isnull` (check for null values)
 * `contains` (substring match)
 
-**Example YAML Predicate:**
+**Example YAML Predicates:**
+
+Example 1.
 
 ```yaml
 and:
@@ -40,6 +42,14 @@ and:
   value: 2
 - column: c3
   op: isnull
+```
+
+Example 2.
+
+```yaml
+- column: c2
+  op: ">"
+  value: 2
 ```
 
 **Usage Notes:**
