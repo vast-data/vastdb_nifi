@@ -6,6 +6,7 @@ import pytest
 
 from vastdb_nifi.processors.predicate_parser import parse_yaml_predicate
 
+
 def test_datestring():
     yaml_predicate = """
     and:
@@ -19,6 +20,7 @@ def test_datestring():
     ibis_expr = parse_yaml_predicate(yaml_predicate)
     assert repr(ibis_expr) == "((_['tpep_pickup_datetime'] >= '20120101') & (_['tpep_pickup_datetime'] <= '20120110'))"
 
+
 def test_single_column_predicate():
     yaml_predicate = """
     - column: extra
@@ -27,6 +29,7 @@ def test_single_column_predicate():
     """
     ibis_expr = parse_yaml_predicate(yaml_predicate)
     assert repr(ibis_expr) == "(_['extra'] > 2)"
+
 
 def test_integer_value_predicate():
     yaml_predicate = """
