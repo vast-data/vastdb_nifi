@@ -20,7 +20,7 @@ def test_datestring():
     """
     ibis_expr = parse_yaml_predicate(yaml_predicate)
     expected_expr = (_["tpep_pickup_datetime"] >= "20120101") & (_["tpep_pickup_datetime"] <= "20120110")
-    assert repr(ibis_expr) == repr(expected_expr)
+    assert str(ibis_expr.compile()) == str(expected_expr.compile())
 
 
 def test_single_column_predicate():
