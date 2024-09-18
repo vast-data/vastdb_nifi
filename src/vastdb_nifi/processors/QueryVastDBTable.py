@@ -4,18 +4,18 @@
 
 import vastdb
 from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
-from nifiapi.properties import PropertyDescriptor, StandardValidators
+from nifiapi.properties import ExpressionLanguageScope, PropertyDescriptor, StandardValidators
 from predicate_parser import parse_yaml_predicate
 
 
-class PutVastDB(FlowFileTransform):
+class QueryVastDBTable(FlowFileTransform):
     class Java:
         implements = ["org.apache.nifi.python.processor.FlowFileTransform"]
 
     class ProcessorDetails:
         dependencies = ["vastdb", "pyarrow"]
         version = "{{version}}"  # auto generated - do not edit
-        tags = ["vastdb", "arrow"]
+        tags = ["vastdb", "yaml"]
         description = """Publishes Parquet or JSON data to a Vast DB."""
 
     # ruff: noqa: ARG002
@@ -56,22 +56,54 @@ class PutVastDB(FlowFileTransform):
             validators=[StandardValidators.NON_EMPTY_VALIDATOR],
         )
 
+        self.vastdb_columns = PropertyDescriptor(
+            name="Columns",
+            description="List of Columns to select (seperated by commas), or leave blank to select all columns",
+            required=True,
+            default_value=None,
+            expression_language_scope=ExpressionLanguageScope.FLOWFILE_ATTRIBUTES,
+            # TODO: use REGULAR_EXPRESSION_WITH_EL_VALIDATOR
+        )
+
+        self.vastdb_predicates = PropertyDescriptor(
+            name="Predicates",
+            description="Predicates yaml",
+            required=True,
+            default_value="""and:
+  - column: c2
+    op: >
+    value: ${c2_value}
+  - column: c3
+    op: isnull
+""",
+            expression_language_scope=ExpressionLanguageScope.FLOWFILE_ATTRIBUTES,
+            # TODO: use REGULAR_EXPRESSION_WITH_EL_VALIDATOR
+        )
+
         self.descriptors = [
             self.vastdb_endpoint,
             self.vastdb_credentials_provider_service,
             self.vastdb_bucket,
             self.vastdb_schema,
             self.vastdb_table,
+            self.vastdb_columns,
+            self.vastdb_predicates,
         ]
 
     # Processor properties
     def getPropertyDescriptors(self):
         return self.descriptors
 
+    def get_el_property(self, context, flowfile, property_name) -> str:
+        # Check if EL is present in the property value
+        if context.getProperty(property_name).isExpressionLanguagePresent():
+            return context.getProperty(property_name).evaluateAttributeExpressions(flowfile).getValue()
+        return context.getProperty(property_name).getValue()
+
     def transform(self, context, flowfile):
         session = self.get_vastdb_session(context)
-        self.query(context, session)
-        return FlowFileTransformResult(relationship="success")
+        rows = self.query_vastdb(context, flowfile, session)
+        return FlowFileTransformResult(relationship="success", contents=rows)
 
     def get_vastdb_session(self, context):
         vastdb_endpoint = context.getProperty(self.vastdb_endpoint.name).getValue()
@@ -91,27 +123,32 @@ class PutVastDB(FlowFileTransform):
         else:
             return session
 
-    def write_to_vastdb(self, context, session, pa_table):
+    def extract_column_list(self, context, flowfile):
+        vastdb_columns_data = self.get_el_property(context, flowfile, self.vastdb_columns.name)
+
+        # Split, filter out empty columns, and strip whitespace
+        column_list = [col.strip() for col in vastdb_columns_data.split(",") if col.strip()]
+
+        # Return None if the list is empty
+        if not column_list:
+            return None
+        return column_list
+
+    def query_vastdb(self, context, flowfile, session):
         vastdb_bucket = context.getProperty(self.vastdb_bucket.name).getValue()
         vastdb_schema = context.getProperty(self.vastdb_schema.name).getValue()
         vastdb_table = context.getProperty(self.vastdb_table.name).getValue()
+        vastdb_column_list = self.extract_column_list(context, flowfile)
+        vastdb_predicate = self.get_el_property(context, flowfile, self.vastdb_predicates.name)
 
-        columns = ["c1"]
-
-        yaml_predicate = """
-        and:
-        - column: c2
-            op: >
-            value: 2
-        - column: c3
-            op: isnull
-        """
-
-        ibis_expr = parse_yaml_predicate(yaml_predicate)
+        ibis_expr = parse_yaml_predicate(vastdb_predicate)
 
         with session.transaction() as tx:
             bucket: vastdb.bucket.Bucket = tx.bucket(vastdb_bucket)
             schema: vastdb.schema.Schema = bucket.schema(vastdb_schema, fail_if_missing=True)
             table: vastdb.table.Table = schema.table(vastdb_table, fail_if_missing=True)
 
-            return table.select(columns=columns, predicate=ibis_expr)
+            reader = table.select(columns=vastdb_column_list, predicate=ibis_expr)
+            table = reader.read_all()
+            df = table.to_pandas()
+            return df.to_json(orient="records")

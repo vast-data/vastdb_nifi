@@ -42,43 +42,50 @@ def parse_yaml_predicate(yaml_str):
     data = yaml.safe_load(yaml_str)
 
     def build_expression(predicate):
-        if "and" in predicate:
-            return ibis.and_(*[build_expression(p) for p in predicate["and"]])
-        if "or" in predicate:
-            return ibis.or_(*[build_expression(p) for p in predicate["or"]])
-        column = predicate["column"]
-        op = predicate["op"]
-        value = predicate["value"]
+        if isinstance(predicate, dict):  # Check if it's a dictionary
+            if "and" in predicate:
+                return ibis.and_(*[build_expression(p) for p in predicate["and"]])
+            if "or" in predicate:
+                return ibis.or_(*[build_expression(p) for p in predicate["or"]])
+            column = predicate["column"]
+            op = predicate["op"]
+            value = predicate["value"]
 
-        if op not in ALLOWED_OPS:
-            error_message = f"Unsupported operator: {op}"
-            raise ValueError(error_message)
+            if op not in ALLOWED_OPS:
+                error_message = f"Unsupported operator: {op}"
+                raise ValueError(error_message)
 
-        table = ibis.table([(column, infer_type(value))])
+            table = ibis.table([(column, infer_type(value))])
 
-        if op == "isin":
-            return table[column].isin(value)
-        if op == "isnull":
-            return table[column].isnull()
-        if op == "contains":
-            return table[column].contains(value)
-        return getattr(table[column], op)(value)
+            if op == "isin":
+                return table[column].isin(value)
+            if op == "isnull":
+                return table[column].isnull()
+            if op == "contains":
+                return table[column].contains(value)
+            return getattr(table[column], op)(value)
 
+        if isinstance(predicate, list):  # Check if it's a list
+            return [build_expression(p) for p in predicate]
+
+        error_message = f"Unsupported predicate type: {type(predicate)}"
+        raise ValueError(error_message)
+
+    def infer_type(value):
+        """Infers the Ibis data type from a Python value."""
+        if isinstance(value, str):
+            return "string"
+        if isinstance(value, int):
+            return "int64"
+        if isinstance(value, float):
+            return "float64"
+        if isinstance(value, bool):
+            return "boolean"
+        if isinstance(value, list):
+            return "array<" + infer_type(value[0]) + ">"
+
+        error_message = f"Unsupported value type: {type(value)}"
+        raise ValueError(error_message)
+
+    # Call build_expression and return the result
     return build_expression(data)
-
-
-def infer_type(value):
-    """Infers the Ibis data type from a Python value."""
-    if isinstance(value, str):
-        return "string"
-    if isinstance(value, int):
-        return "int64"
-    if isinstance(value, float):
-        return "float64"
-    if isinstance(value, bool):
-        return "boolean"
-    if isinstance(value, list):
-        return "array<" + infer_type(value[0]) + ">"
-
-    error_message = f"Unsupported value type: {type(value)}"
-    raise ValueError(error_message)

@@ -21,9 +21,10 @@
 
 This is a **community supported** project containing NiFi 2.0.0 Python Processors for Vast DataBase:
 
-- **DropVastDB**: Drop a Vast DataBase Table ([docs](./docs/DropVastDB.md))
+- **DropVastDBTable**: Drop a Vast DataBase Table ([docs](./docs/DropVastDBTable.md))
 - **ImportVastDB**: Imports parquet files from Vast S3 ([docs](./docs/ImportVastDB.md))
 - **PutVastDB**: Writes Parquet or JSON data to a Vast DataBase Table ([docs](./docs/PutVastDB.md))
+- **QueryVastDBTable**: Queries a Vast DataBase Table ([docs](./docs/QueryVastDBTable.md))
 
 **Features**
 

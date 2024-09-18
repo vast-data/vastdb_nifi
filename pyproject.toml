@@ -23,7 +23,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "pyarrow", "vastdb"
+  "pandas", "pyarrow", "pyyaml", "vastdb"
 ]
 
 [project.urls]
