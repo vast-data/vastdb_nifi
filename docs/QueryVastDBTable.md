@@ -36,7 +36,7 @@ and:
 ```yaml
 and:
 - column: c2
-  op: >
+  op: ">"
   value: 2
 - column: c3
   op: isnull

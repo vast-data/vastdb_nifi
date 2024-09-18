@@ -9,40 +9,14 @@ ALLOWED_OPS = ["<", "<=", "==", ">", ">=", "!=", "isin", "isnull", "contains"]
 
 
 def parse_yaml_predicate(yaml_str):
-    """
-    Parses a YAML string representing a predicate.
-
-    Args:
-        yaml_str: The YAML string to parse.
-
-    Returns:
-        An Ibis expression representing the parsed predicate.
-
-    Example:
-        yaml_predicate = '''
-        and:
-          - or:
-              - column: x
-                op: <
-                value: 5
-              - column: x
-                op: >=
-                value: 10
-          - column: y
-            op: isin
-            value: [1, 3, 5]
-          - column: z
-            op: isnull
-        '''
-
-        ibis_expr = parse_yaml_predicate(yaml_predicate)
-        print(ibis_expr)
-    """
-
     data = yaml.safe_load(yaml_str)
 
+    # Extract the single predicate dictionary from the list if necessary
+    if isinstance(data, list) and len(data) == 1 and isinstance(data[0], dict):
+        data = data[0]
+
     def build_expression(predicate):
-        if isinstance(predicate, dict):  # Check if it's a dictionary
+        if isinstance(predicate, dict):
             if "and" in predicate:
                 return ibis.and_(*[build_expression(p) for p in predicate["and"]])
             if "or" in predicate:
@@ -50,11 +24,21 @@ def parse_yaml_predicate(yaml_str):
 
             # Handle single column predicate without 'and' or 'or'
             column = predicate["column"]
-            op = predicate["op"]
+            op = predicate.get("op")
             value = predicate["value"]
 
-            if op not in ALLOWED_OPS:
-                error_message = f"Unsupported operator: {op}"
+            if op is None:
+                error_message = f"Missing or empty operator for column: {column}. Predicate: {predicate}"
+                raise ValueError(error_message)
+
+            op = op.strip().lower()
+
+            if not op:
+                error_message = f"Missing or empty operator for column: {column}. Predicate: {predicate}"
+                raise ValueError(error_message)
+
+            if op not in [a.lower() for a in ALLOWED_OPS]:
+                error_message = f"Unsupported operator: {op}. Predicate: {predicate}"
                 raise ValueError(error_message)
 
             table = ibis.table([(column, infer_type(value))])
@@ -65,17 +49,23 @@ def parse_yaml_predicate(yaml_str):
                 return table[column].isnull()
             if op == "contains":
                 return table[column].contains(value)
-            return getattr(table[column], op)(value)
 
-        if isinstance(predicate, list):  # Check if it's a list
-            # Iterate over the list and handle each item as a dictionary
-            return [build_expression(item) for item in predicate]
+            # Use operator mapping for comparison operators
+            op_map = {">": "__gt__", ">=": "__ge__", "<": "__lt__", "<=": "__le__", "==": "__eq__", "!=": "__ne__"}
+            if op in op_map:
+                return getattr(table[column], op_map[op])(value)
+
+            error_message = f"Unhandled operator: {op}.  Predicate: {predicate}"
+            raise ValueError(error_message)
+
+        if isinstance(predicate, list):
+            error_message = f"Unexpected list encountered in predicate: {predicate}"
+            raise TypeError(error_message)
 
         error_message = f"Unsupported predicate type: {type(predicate)}"
         raise ValueError(error_message)
 
     def infer_type(value):
-        """Infers the Ibis data type from a Python value."""
         if isinstance(value, str):
             return "string"
         if isinstance(value, int):
@@ -90,5 +80,4 @@ def parse_yaml_predicate(yaml_str):
         error_message = f"Unsupported value type: {type(value)}"
         raise ValueError(error_message)
 
-    # Call build_expression and return the result
     return build_expression(data)

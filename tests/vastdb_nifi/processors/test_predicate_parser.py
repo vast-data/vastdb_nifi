@@ -2,23 +2,39 @@
 #
 # SPDX-License-Identifier: MIT
 
-import unittest
+import pytest
 
 from vastdb_nifi.processors.predicate_parser import parse_yaml_predicate
 
 
-class TestPredicateParser(unittest.TestCase):
-    def test_single_column_predicate(self):
-        yaml_predicate = """
-- column: extra
-  op: >
-  value: 2
-"""
-        expected_expr = "extra > 2"
+def test_single_column_predicate():
+    yaml_predicate = """
+    - column: extra
+      op: ">"
+      value: 2
+    """
+    ibis_expr = parse_yaml_predicate(yaml_predicate)
+    assert "extra > 2" in str(ibis_expr)
 
-        ibis_expr = parse_yaml_predicate(yaml_predicate)
-        assert str(ibis_expr) == expected_expr  # Replace self.assertEqual with assert
+
+def test_empty_operator():
+    yaml_predicate = """
+    - column: extra
+      op:
+      value: 2
+    """
+    with pytest.raises(ValueError, match="Missing or empty operator for column: extra"):
+        parse_yaml_predicate(yaml_predicate)
+
+
+def test_missing_operator():
+    yaml_predicate = """
+    - column: extra
+      value: 2
+    """
+    with pytest.raises(ValueError, match="Missing or empty operator for column: extra"):
+        parse_yaml_predicate(yaml_predicate)
 
 
 if __name__ == "__main__":
-    unittest.main()
+    pytest.main()
