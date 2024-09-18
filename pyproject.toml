@@ -23,7 +23,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "pyarrow", "vastdb"
+  "pandas", "pyarrow", "pyyaml", "vastdb"
 ]
 
 [project.urls]
@@ -48,7 +48,7 @@ omit = [
 
 [tool.coverage.paths]
 vastdb_nifi = ["src/vastdb_nifi", "*/vastdb-nifi/src/vastdb_nifi"]
-tests = ["tests", "*/vastdb-nifi/tests"]
+tests = ["tests", "tests/vastdb_nifi/"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -71,7 +71,9 @@ exclude = [
 "src/vastdb_nifi/processors/PutVastDB.py" = "PutVastDB.py"
 "src/vastdb_nifi/processors/ImportVastDB.py" = "ImportVastDB.py"
 "src/vastdb_nifi/processors/DropVastDBTable.py" = "DropVastDBTable.py"
+"src/vastdb_nifi/processors/QueryVastDBTable.py" = "QueryVastDBTable.py"
 "src/vastdb_nifi/processors/_version.py" = "_version.py"
+"src/vastdb_nifi/processors/predicate_parser.py" = "predicate_parser.py"
 
 [tool.ruff]
 preview = true
