@@ -26,6 +26,8 @@ jobs:
         pip install hatch
     - name: Check Formatting
       run: hatch fmt --check
+    - name: Run tests
+      run: hatch test
     - name: Build
       run: hatch build -t custom
     - name: Get NAR filename

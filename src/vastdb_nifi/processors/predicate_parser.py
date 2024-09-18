@@ -47,6 +47,8 @@ def parse_yaml_predicate(yaml_str):
                 return ibis.and_(*[build_expression(p) for p in predicate["and"]])
             if "or" in predicate:
                 return ibis.or_(*[build_expression(p) for p in predicate["or"]])
+
+            # Handle single column predicate without 'and' or 'or'
             column = predicate["column"]
             op = predicate["op"]
             value = predicate["value"]
@@ -66,7 +68,8 @@ def parse_yaml_predicate(yaml_str):
             return getattr(table[column], op)(value)
 
         if isinstance(predicate, list):  # Check if it's a list
-            return [build_expression(p) for p in predicate]
+            # Iterate over the list and handle each item as a dictionary
+            return [build_expression(item) for item in predicate]
 
         error_message = f"Unsupported predicate type: {type(predicate)}"
         raise ValueError(error_message)

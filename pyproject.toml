@@ -48,7 +48,7 @@ omit = [
 
 [tool.coverage.paths]
 vastdb_nifi = ["src/vastdb_nifi", "*/vastdb-nifi/src/vastdb_nifi"]
-tests = ["tests", "*/vastdb-nifi/tests"]
+tests = ["tests", "tests/vastdb_nifi/"]
 
 [tool.coverage.report]
 exclude_lines = [

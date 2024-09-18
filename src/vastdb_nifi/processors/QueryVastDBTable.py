@@ -141,6 +141,8 @@ class QueryVastDBTable(FlowFileTransform):
         vastdb_column_list = self.extract_column_list(context, flowfile)
         vastdb_predicate = self.get_el_property(context, flowfile, self.vastdb_predicates.name)
 
+        self.logger.info(f"Received predicate {vastdb_predicate}")
+
         ibis_expr = parse_yaml_predicate(vastdb_predicate)
 
         with session.transaction() as tx:
