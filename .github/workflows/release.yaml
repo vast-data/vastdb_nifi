@@ -1,5 +1,4 @@
 name: Release
-
 on:
   push:
     tags:
@@ -16,28 +15,36 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0 # Important for Hatch versioning
-
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install hatch hatchling
-
       - name: Build NAR
         run: hatch build -t custom
-
-      - name: Check if tag already exists
-        id: check_tag
-        uses: mukunku/tag-exists-action@v1.6.0
+      - name: Upload NAR artifact
+        uses: actions/upload-artifact@v3
         with:
-          tag: ${{ github.ref_name }}
+          name: nar-files
+          path: dist/*.nar
 
-      - name: Create GitHub Release (only if tag doesn't exist)
-        if: steps.check_tag.outputs.exists == 'false'
-        uses: softprops/action-gh-release@v2
+  create-release:
+    needs: build-and-publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Download NAR artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: nar-files
+          path: dist
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
         with:
           files: dist/*.nar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
