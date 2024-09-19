@@ -1,5 +1,3 @@
-name: Build
-
 on:
   push:
     branches: [ "**" ]
@@ -11,7 +9,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        # Add aarch64 
+        os: [ubuntu-latest, macos-latest, 'ubuntu-22.04'] 
         python-version: ["3.9", "3.10", "3.11"]
 
     steps:
@@ -28,8 +27,28 @@ jobs:
       run: hatch fmt --check
     - name: Run tests
       run: hatch test
+
+    # Set up QEMU for aarch64 emulation on non-aarch64 runners
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+      if: runner.arch != 'arm64'  # Only run if not already on aarch64
+      with:
+        platforms: 'linux/arm64'
+
+    # Set up aarch64 environment if on the 'ubuntu-22.04' runner
+    - name: Set up aarch64 environment
+      if: matrix.os == 'ubuntu-22.04'
+      run: |
+        sudo dpkg --add-architecture arm64
+        sudo apt-get update
+        sudo apt-get install -y --fix-missing \
+          g++-aarch64-linux-gnu \
+          gcc-aarch64-linux-gnu \
+          libc6-dev:arm64 \
+          libstdc++-10-dev:arm64
+
     - name: Build
-      run: hatch build -t custom
+      run: hatch build -t custom --platform linux_aarch64  # Specify aarch64 platform
     - name: Get NAR filename
       id: get_nar_filename
       run: |
