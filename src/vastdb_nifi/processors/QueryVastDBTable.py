@@ -143,12 +143,14 @@ class QueryVastDBTable(FlowFileTransform):
 
         self.logger.info(f"Received predicate {vastdb_predicate}")
 
-        ibis_expr = parse_yaml_predicate(vastdb_predicate)
-
         with session.transaction() as tx:
             bucket: vastdb.bucket.Bucket = tx.bucket(vastdb_bucket)
             schema: vastdb.schema.Schema = bucket.schema(vastdb_schema, fail_if_missing=True)
             table: vastdb.table.Table = schema.table(vastdb_table, fail_if_missing=True)
+
+            # FUTURE: retrieve datatype from table column definition so
+            #         so the user doesn't have to manually specify.
+            ibis_expr = parse_yaml_predicate(vastdb_predicate)
 
             log_message = (
                 f"Selecting from table '{table.name}' columns '{vastdb_column_list}' "

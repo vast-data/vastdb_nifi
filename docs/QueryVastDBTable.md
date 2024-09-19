@@ -21,8 +21,11 @@ and:
 - column: <column_name>
   op: <operator> 
   value: <value>
+  datatype: <pyarrow_datatype>
 # ... more predicates can be added under 'and'
 ```
+
+See [here](https://github.com/vast-data/vastdb_sdk/blob/main/docs/predicate.md) for the supported datatype values.
 
 **Supported Operators:**
 
@@ -40,6 +43,7 @@ and:
 - column: c2
   op: ">"
   value: 2
+  datatype: "int64"
 - column: c3
   op: isnull
 ```
@@ -50,6 +54,7 @@ Example 2.
 - column: c2
   op: ">"
   value: 2
+  datatype: "int64"
 ```
 
 **Usage Notes:**

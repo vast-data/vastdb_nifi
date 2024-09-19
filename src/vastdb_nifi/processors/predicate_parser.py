@@ -8,15 +8,40 @@ import yaml
 ALLOWED_OPS = ["<", "<=", "==", ">", ">=", "!=", "isin", "isnull", "contains"]
 
 
+def cast_to_ibis_type(value, type_str):
+    type_map = {
+        "int8": "int8",
+        "int16": "int16",
+        "int32": "int32",
+        "int64": "int64",
+        "float32": "float32",
+        "float64": "float64",
+        "utf8": "string",
+        "bool": "boolean",
+        "decimal128": "decimal",
+        "binary": "binary",
+        "date32": "date",
+        "time32": "time",
+        "time64": "time",
+        "timestamp": "timestamp",
+    }
+
+    if type_str not in type_map:
+        error_message = f"Unsupported type: {type_str}"
+        raise ValueError(error_message)
+
+    ibis_type = ibis.dtype(type_map[type_str])
+    return ibis.literal(value, type=ibis_type)
+
+
 def parse_yaml_predicate(yaml_str):
     data = yaml.safe_load(yaml_str)
 
-    # Extract the single predicate dictionary from the list if necessary
     if isinstance(data, list) and len(data) == 1 and isinstance(data[0], dict):
         data = data[0]
 
     def build_expression(predicate):
-        from ibis import _  # Import the _ placeholder
+        from ibis import _
 
         if isinstance(predicate, dict):
             if "and" in predicate:
@@ -27,6 +52,10 @@ def parse_yaml_predicate(yaml_str):
             column = predicate["column"]
             op = predicate.get("op")
             value = predicate["value"]
+            datatype = predicate.get("datatype")
+
+            if datatype:
+                value = cast_to_ibis_type(value, datatype)
 
             if op is None:
                 error_message = f"Missing or empty operator for column: {column}. Predicate: {predicate}"
@@ -42,7 +71,6 @@ def parse_yaml_predicate(yaml_str):
                 error_message = f"Unsupported operator: {op}. Predicate: {predicate}"
                 raise ValueError(error_message)
 
-            # Use the _ placeholder to build expressions
             column_expr = _[column]
 
             if op == "isin":
@@ -64,21 +92,6 @@ def parse_yaml_predicate(yaml_str):
             raise TypeError(error_message)
 
         error_message = f"Unsupported predicate type: {type(predicate)}"
-        raise ValueError(error_message)
-
-    def infer_type(value):
-        if isinstance(value, str):
-            return "string"
-        if isinstance(value, int):
-            return "int64"
-        if isinstance(value, float):
-            return "float64"
-        if isinstance(value, bool):
-            return "boolean"
-        if isinstance(value, list):
-            return "array<" + infer_type(value[0]) + ">"
-
-        error_message = f"Unsupported value type: {type(value)}"
         raise ValueError(error_message)
 
     return build_expression(data)
