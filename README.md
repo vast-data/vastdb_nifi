@@ -65,6 +65,8 @@ docker run --name nifi \
 
 Then visit: https://localhost:8443 and login with `username: admin` and `password: 123456123456`
 
+Due to security changes with Apache NiFi 2.x these instructions will only work using the localhost (or 127.0.0.1) url.
+
 ### Apache NiFi Install
 
  - [NiFi Standard 2.0.0-M4](https://nifi.apache.org/download/) [or later] installed ([install docs](https://nifi.apache.org/docs/nifi-docs/html/getting-started.html#downloading-and-installing-nifi)).  The installation directory will be referred to as `$NIFI_HOME`.
