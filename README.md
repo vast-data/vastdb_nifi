@@ -60,6 +60,7 @@ docker run --name nifi \
    -e SINGLE_USER_CREDENTIALS_USERNAME=admin \
    -e SINGLE_USER_CREDENTIALS_PASSWORD=123456123456 \
    -v .:/opt/nifi/nifi-current/nar_extensions \
+   --platform linux/amd64 \
    apache/nifi:2.0.0-M4
 ```
 
