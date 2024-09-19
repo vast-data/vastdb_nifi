@@ -47,7 +47,7 @@ mkdir nifi_extensions
 cd nifi_extension
 
 ## CHANGE 1.0.1 to the latest release number:
-wget https://github.com/vast-data/vastdb_nifi/releases/download/v1.0.1/vastdb_nifi-1.0.1-linux-x86_64-py310.nar
+wget https://github.com/vast-data/vastdb_nifi/releases/download/v1.0.1/vastdb_nifi-1.0.1-linux-x86_64-py39.nar
 ```
 
 Then run docker:
