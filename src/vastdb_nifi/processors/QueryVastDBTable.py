@@ -73,6 +73,7 @@ class QueryVastDBTable(FlowFileTransform):
   - column: c2
     op: >
     value: ${c2_value}
+    datatype: "int64"
   - column: c3
     op: isnull
 """,
