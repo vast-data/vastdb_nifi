@@ -2,7 +2,7 @@
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/vast-data/vastdb_nifi?style=flat-square)](https://github.com/vast-data/vastdb_nifi/releases)
 [![Build Status](https://github.com/vast-data/vastdb_nifi/actions/workflows/main.yml/badge.svg)](https://github.com/vast-data/vastdb_nifi/actions/workflows/main.yml)
-[![Supported Python versions](https://img.shields.io/badge/3.9&nbsp;%7C%203.10&nbsp;%7C%203.11-blue)](https://www.python.org/)
+[![Supported Python versions](https://img.shields.io/badge/Python-3.9%20|%203.10%20|%203.11-blue)](https://www.python.org/)
 [![Supported Platforms](https://img.shields.io/badge/platform-MacOS%20ARM64%20|%20linux%20AMD64-lightgrey)](https://www.python.org/)
 [![code style: ruff](https://img.shields.io/badge/code%20style-ruff-4B4483.svg)](https://github.com/astral-sh/ruff)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
