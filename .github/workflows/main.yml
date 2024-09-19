@@ -48,7 +48,7 @@ jobs:
           libstdc++-10-dev:arm64
 
     - name: Build
-      run: hatch build -t custom --platform linux_aarch64  # Specify aarch64 platform
+      run: hatch build -t custom
     - name: Get NAR filename
       id: get_nar_filename
       run: |
