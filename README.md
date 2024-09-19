@@ -33,6 +33,40 @@ This is a **community supported** project containing NiFi 2.0.0 Python Processor
 
 ## Installation
 
+There are two main options:
+
+- [Docker Run](#docker-run)
+- [Apache NiFi Install](#apache-nifi-install)
+
+### Docker Run
+
+First download this extension:
+
+```
+mkdir nifi_extensions
+cd nifi_extension
+
+## CHANGE 1.0.1 to the latest release number:
+wget https://github.com/vast-data/vastdb_nifi/releases/download/v1.0.1/vastdb_nifi-1.0.1-linux-x86_64-py310.nar
+```
+
+Then run docker:
+
+```
+cd nifi_extension
+docker run --name nifi \
+   -p 8443:8443 \
+   -d \
+   -e SINGLE_USER_CREDENTIALS_USERNAME=admin \
+   -e SINGLE_USER_CREDENTIALS_PASSWORD=123456123456 \
+   -v .:/opt/nifi/nifi-current/nar_extensions \
+   apache/nifi:2.0.0-M4
+```
+
+Then visit: https://localhost:8443 and login with `username: admin` and `password: 123456123456`
+
+### Apache NiFi Install
+
  - [NiFi Standard 2.0.0-M4](https://nifi.apache.org/download/) [or later] installed ([install docs](https://nifi.apache.org/docs/nifi-docs/html/getting-started.html#downloading-and-installing-nifi)).  The installation directory will be referred to as `$NIFI_HOME`.
  - Uncomment `nifi.python.command=python3` in `$NIFI_HOME/conf/nifi.properties`
  - Download the [nar file](https://github.com/vast-data/vastdb_nifi/releases/latest) for your platform and Python version
