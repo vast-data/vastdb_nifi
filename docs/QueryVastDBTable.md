@@ -1,5 +1,3 @@
-Okay, let's draft the documentation for the `QueryVastDBTable` processor based on the provided example code and the context of the `DropVastDBTable` processor.
-
 ## QueryVastDBTable Processor
 
 **Description:**
@@ -26,6 +24,8 @@ and:
 ```
 
 See [here](https://github.com/vast-data/vastdb_sdk/blob/main/docs/predicate.md) for the supported datatype values.
+
+* **Return internal row ID:** A boolean value indicating whether to include the internal row ID in the query results.
 
 **Supported Operators:**
 
@@ -62,6 +62,7 @@ Example 2.
 * The processor establishes a connection to VastDB using the provided endpoint and credentials.
 * It extracts the column list and parses the YAML predicate to construct an Ibis expression.
 * The query is executed on the specified table, and the results are converted to a Pandas DataFrame and then to JSON.
+* If `Return internal row ID` is set to `True`, the internal row IDs will be included in the JSON output under the key `_rowid`.
 * The JSON output is written to the FlowFile content and routed to the 'success' relationship.
 * Ensure that the YAML predicate adheres to the specified structure and uses supported operators.
-* Use Expression Language in the `VastDB Table Name` and `Columns` properties to reference FlowFile attributes for dynamic behavior.
+* Use Expression Language in the `VastDB Table Name` and `Columns` properties to reference FlowFile attributes for dynamic behavior. 

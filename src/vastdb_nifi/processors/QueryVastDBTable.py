@@ -81,6 +81,14 @@ class QueryVastDBTable(FlowFileTransform):
             # TODO: use REGULAR_EXPRESSION_WITH_EL_VALIDATOR
         )
 
+        self.return_row_id = PropertyDescriptor(
+            name="Return internal row ID",
+            description=("Return the internal row ID."),
+            allowable_values=["True", "False"],
+            required=True,
+            default_value="False",
+        )
+
         self.descriptors = [
             self.vastdb_endpoint,
             self.vastdb_credentials_provider_service,
@@ -89,6 +97,7 @@ class QueryVastDBTable(FlowFileTransform):
             self.vastdb_table,
             self.vastdb_columns,
             self.vastdb_predicates,
+            self.return_row_id,
         ]
 
     # Processor properties
@@ -135,12 +144,31 @@ class QueryVastDBTable(FlowFileTransform):
             return None
         return column_list
 
+    def parse_bool_string(self, s):
+        """Parses a "True" or "False" string into a Python bool.
+
+        Args:
+            s: The string to parse.
+
+        Returns:
+            True if the string is "True", False if the string is "False".
+            Raises a ValueError if the string is neither "True" nor "False".
+        """
+        if s.lower() == "true":
+            return True
+        if s.lower() == "false":
+            return False
+
+        error_message = f"Invalid bool string: {s}"
+        raise ValueError(error_message)
+
     def query_vastdb(self, context, flowfile, session):
         vastdb_bucket = context.getProperty(self.vastdb_bucket.name).getValue()
         vastdb_schema = context.getProperty(self.vastdb_schema.name).getValue()
         vastdb_table = context.getProperty(self.vastdb_table.name).getValue()
         vastdb_column_list = self.extract_column_list(context, flowfile)
         vastdb_predicate = self.get_el_property(context, flowfile, self.vastdb_predicates.name)
+        vastdb_ret_row_id = self.parse_bool_string(context.getProperty(self.return_row_id.name).getValue())
 
         self.logger.info(f"Received predicate {vastdb_predicate}")
 
@@ -160,7 +188,9 @@ class QueryVastDBTable(FlowFileTransform):
             self.logger.info(log_message)
 
             try:
-                reader = table.select(columns=vastdb_column_list, predicate=ibis_expr)
+                reader = table.select(
+                    columns=vastdb_column_list, predicate=ibis_expr, internal_row_id=vastdb_ret_row_id
+                )
                 table = reader.read_all()
                 df = table.to_pandas()
                 return df.to_json(orient="records")
