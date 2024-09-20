@@ -159,4 +159,6 @@ class DeleteVastDB(FlowFileTransform):
                     error_message = f"Error creating table '{vastdb_table}' with schema {pa_table.schema}: {e}"
                     raise RuntimeError(error_message) from e
 
+            self.logger.info(f"Deleting '{pa_table.num_rows}' from table '{vastdb_table}'.")
             table.delete(pa_table)
+            self.logger.info(f"Deleted '{pa_table.num_rows}' from table '{vastdb_table}'.")
