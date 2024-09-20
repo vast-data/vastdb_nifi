@@ -26,7 +26,6 @@ This is a **community supported** project containing NiFi 2.0.0 Python Processor
 - **ImportVastDB**: Imports parquet files from Vast S3 ([docs](./docs/ImportVastDB.md))
 - **PutVastDB**: Writes Parquet or JSON data to a Vast DataBase Table ([docs](./docs/PutVastDB.md))
 - **QueryVastDBTable**: Queries a Vast DataBase Table ([docs](./docs/QueryVastDBTable.md))
-- **DeleteVastDB**: Delete Vast DataBase Table Rows (coming soon ...)
 
 **Features**
 
