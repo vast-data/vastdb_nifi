@@ -75,6 +75,7 @@ exclude = [
 "src/vastdb_nifi/processors/ImportVastDB.py" = "ImportVastDB.py"
 "src/vastdb_nifi/processors/DropVastDBTable.py" = "DropVastDBTable.py"
 "src/vastdb_nifi/processors/QueryVastDBTable.py" = "QueryVastDBTable.py"
+"src/vastdb_nifi/processors/DeleteVastDB.py" = "DeleteVastDB.py"
 "src/vastdb_nifi/processors/_version.py" = "_version.py"
 "src/vastdb_nifi/processors/predicate_parser.py" = "predicate_parser.py"
 
