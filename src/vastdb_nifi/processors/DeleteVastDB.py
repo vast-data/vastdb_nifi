@@ -90,19 +90,7 @@ class DeleteVastDB(FlowFileTransform):
         session = self.get_vastdb_session(context)
         pa_table = self.read_json(flowfile) if incoming_data_type == "Json" else self.read_parquet(flowfile)
 
-        schema = pa_table.schema
-
-        # Filter out fields with null types
-        fields_to_keep = [field.name for field in schema if field.type != pa.null()]
-
-        # Convert schema.names to a set for difference operation
-        schema_names_set = set(schema.names)
-
-        # Create a new table by dropping null-typed fields
-        pa_table_without_nulls = pa_table.drop(list(schema_names_set.difference(fields_to_keep)))
-
-        # failed_batches = self.write_to_vastdb(context, session, pa_table)
-        self.write_to_vastdb(context, session, pa_table_without_nulls)
+        self.write_to_vastdb(context, session, pa_table)
         return FlowFileTransformResult(relationship="success")
 
     def read_parquet(self, flowfile):
