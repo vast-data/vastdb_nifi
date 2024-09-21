@@ -15,6 +15,7 @@
 
 - [Overview](#overview)
 - [Installation](#installation)
+- [Contributing](#contributing)
 - [License](#license)
 
 ## Overview
