@@ -15,28 +15,10 @@ The `DeleteVastDB` processor facilitates the deletion of rows from a VastDB tabl
 
 **Usage Notes**
 
-1. **Configuration:**
-    * Provide the correct VastDB endpoint and credentials.
-    * Specify the bucket, schema, and table name accurately.
-    * Choose the appropriate "Data Type" based on your incoming data format.
-
-2. **Incoming Data:**
-    * The incoming FlowFile should contain either Parquet or JSON data.
-    * The data structure within the FlowFile should align with the schema of the VastDB table.
-    * For JSON data, each row must be on a separate line and end with a newline.
-
-3. **Functionality:**
-    * The processor reads the incoming data and extracts the relevant row information.
-    * It connects to VastDB using the provided credentials.
-    * It constructs a delete operation based on the incoming data and executes it on the specified table.
-    * The FlowFile is then routed to the 'success' relationship, indicating successful deletion.
-
-4. **Error Handling:**
-    * The processor includes error handling to manage potential issues like invalid data formats or connection failures.
-    * Error messages are logged to assist in troubleshooting.
-
-**Important Considerations:**
-
 * Ensure your VastDB credentials are correctly configured in the Credentials Provider Service.
-* The incoming data structure must match the table schema for accurate row deletion.
-* For large datasets, consider optimizing performance by adjusting NiFi settings or using partitioning techniques in VastDB.
+* The incoming data must include the internal $row_id.
+* If the incoming data is from the QueryVastDBTable Processor
+   * Ensure you have set `Return Internal Row ID = True`
+   * Use a ConvertRecord processor with:
+      * RecordReader: JsonTreeReader having the default settings
+      * RecordWriter: JsonRecordSetWriter with `Output Grouping` set to `One Record per Line`
