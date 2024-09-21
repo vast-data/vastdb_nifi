@@ -91,8 +91,6 @@ ruff check .
 
 ### Pull Requests
 
-### Pull Requests
-
 We use a standard pull request (PR) workflow to facilitate code reviews and ensure the quality of contributions.
 
 **Process**
