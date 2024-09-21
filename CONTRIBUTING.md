@@ -49,8 +49,6 @@ This is a **community supported** project containing NiFi 2.0.0 Python Processor
 
 ### Branching Strategy
 
-### Branching Strategy
-
 We primarily follow a simplified **GitHub Flow** branching strategy with the addition of release tagging on the `main` branch.
 
 * **Main Branch (`main`)**: The `main` branch represents the latest stable release. It should always be in a deployable state.
@@ -93,7 +91,29 @@ ruff check .
 
 ### Pull Requests
 
-[Describe the process for submitting pull requests and any specific guidelines that developers should follow.]
+### Pull Requests
+
+We use a standard pull request (PR) workflow to facilitate code reviews and ensure the quality of contributions.
+
+**Process**
+
+1. **Fork the repository:** Create your own copy of the repository on GitHub.
+2. **Create a branch:**  From your forked repository, create a new branch for your feature or bug fix. Follow the branching strategy outlined above (e.g., `feature/new-processor` or `fix/query-bug`).
+3. **Make your changes:**  Implement your changes on your branch, ensuring that the code adheres to the coding standards and passes all tests.
+4. **Commit and push:**  Commit your changes with clear and descriptive commit messages. Push your branch to your forked repository.
+5. **Open a pull request:**  From your forked repository, open a pull request against the `main` branch of the original repository.
+6. **Code review and testing:** The maintainers will review your code and provide feedback. Automated tests will also be run to ensure the changes don't introduce any regressions.
+7. **Address feedback:**  Address any feedback or requested changes from the code review.
+8. **Merge:** Once the code review is complete and all tests pass, your pull request will be merged into the `main` branch.
+
+**Guidelines**
+
+* **Clear and descriptive PR titles:**  Use a concise and informative title that summarizes the changes in your pull request.
+* **Detailed descriptions:** Provide a detailed description of the changes, including the motivation behind them and any relevant implementation details.
+* **Reference issues:** If your pull request addresses a specific issue, reference it in the description.
+* **Small and focused PRs:** Keep your pull requests small and focused on a single feature or bug fix. This makes them easier to review and reduces the risk of conflicts.
+* **Tests:** Include tests for any new code or changes to existing code.
+* **Documentation:** Update any relevant documentation to reflect your changes.
 
 ## Contributing
 
