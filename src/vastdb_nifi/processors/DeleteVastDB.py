@@ -4,7 +4,6 @@
 
 import io
 
-import pyarrow as pa
 import pyarrow.parquet as pq
 import vastdb
 from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
