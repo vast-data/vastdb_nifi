@@ -78,6 +78,10 @@ Note:
  - Download the [nar file](https://github.com/vast-data/vastdb_nifi/releases/latest) for your platform and Python version
  - Add the nar file to `$NIFI_HOME/extensions`
 
+## Contributing
+
+We welcome contributions from the community!  Please see our [CONTRIBUTING.md](./CONTRIBUTING.md) guide for details on how to get involved. 
+
 ## License
 
 `vastdb_nifi` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.
