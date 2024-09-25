@@ -49,8 +49,8 @@ First download this extension:
 mkdir nifi_extensions
 cd nifi_extensions
 
-## CHANGE 1.0.8 to the latest release number:
-wget https://github.com/vast-data/vastdb_nifi/releases/download/v1.0.8/vastdb_nifi-1.0.8-linux-x86_64-py39.nar
+LATEST_RELEASE=$(python3 -c "import requests; print(requests.get('https://api.github.com/repos/vast-data/vastdb_nifi/releases/latest').json()['tag_name'].lstrip('v'))")
+wget https://github.com/vast-data/vastdb_nifi/releases/download/v${LATEST_RELEASE}/vastdb_nifi-${LATEST_RELEASE}-linux-x86_64-py39.nar
 
 docker run --name nifi \
    -p 8443:8443 \
