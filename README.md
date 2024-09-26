@@ -43,6 +43,8 @@ There are two main options:
 
 ### Docker Run
 
+This only works for NiFi running locally on your client machine. If you wish setup NiFi on a remote server see [here](https://github.com/snowch/vast_nifi_docker_compose).
+
 First download this extension:
 
 ```
