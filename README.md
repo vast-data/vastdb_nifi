@@ -64,7 +64,10 @@ docker run --name nifi \
    apache/nifi:2.0.0-M4
 ```
 
-Wait a few minutes, then visit: https://hostname_or_ipaddress:8443 and login with `username: admin` and `password: 123456123456`
+Wait a few minutes, then:
+- Open the URL: `https://hostname_or_ipaddress:8443`
+- username: `admin`
+- password: `123456123456`
 
 Note:
 - The `--platform linux/amd64` is a hard requirement.
