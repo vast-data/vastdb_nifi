@@ -43,20 +43,20 @@ There are two main options:
 
 ### Docker Run
 
-This only works for NiFi running locally on your client machine. If you wish setup NiFi on a remote server see [here](https://github.com/snowch/vast_nifi_docker_compose).
-
-First download this extension:
-
 ```
 mkdir nifi_extensions
 cd nifi_extensions
 
 LATEST_RELEASE=$(python3 -c "import requests; print(requests.get('https://api.github.com/repos/vast-data/vastdb_nifi/releases/latest').json()['tag_name'].lstrip('v'))")
-wget https://github.com/vast-data/vastdb_nifi/releases/download/v${LATEST_RELEASE}/vastdb_nifi-${LATEST_RELEASE}-linux-x86_64-py39.nar
+wget -c https://github.com/vast-data/vastdb_nifi/releases/download/v${LATEST_RELEASE}/vastdb_nifi-${LATEST_RELEASE}-linux-x86_64-py39.nar
+
+# set this to the hostname or ip address where you are running NiFi
+NIFI_HOST=hostname_or_ipaddress
 
 docker run --name nifi \
    -p 8443:8443 \
    -d \
+   -e NIFI_WEB_PROXY_HOST=${NIFI_HOST} \
    -e SINGLE_USER_CREDENTIALS_USERNAME=admin \
    -e SINGLE_USER_CREDENTIALS_PASSWORD=123456123456 \
    -v .:/opt/nifi/nifi-current/nar_extensions \
@@ -64,10 +64,9 @@ docker run --name nifi \
    apache/nifi:2.0.0-M4
 ```
 
-Then visit: https://localhost:8443 and login with `username: admin` and `password: 123456123456`
+Then visit: https://hostname_or_ipaddress:8443 and login with `username: admin` and `password: 123456123456`
 
 Note:
-- Due to security requirements with Apache NiFi 2.x these instructions will only work using the localhost (or 127.0.0.1) url.
 - The `--platform linux/amd64` is a hard requirement. 
 
 ### Apache NiFi Install
