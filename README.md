@@ -67,7 +67,8 @@ docker run --name nifi \
 Then visit: https://hostname_or_ipaddress:8443 and login with `username: admin` and `password: 123456123456`
 
 Note:
-- The `--platform linux/amd64` is a hard requirement. 
+- The `--platform linux/amd64` is a hard requirement.
+- If you receive a SNI error when accessing NiFi from your browser, verify the NIFI_HOST variable is set to your NiFi hostname or ip address.
 
 ### Apache NiFi Install
 
