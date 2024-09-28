@@ -64,11 +64,12 @@ docker run --name nifi \
    apache/nifi:2.0.0-M4
 ```
 
-Then visit: https://hostname_or_ipaddress:8443 and login with `username: admin` and `password: 123456123456`
+Wait a few minutes, then visit: https://hostname_or_ipaddress:8443 and login with `username: admin` and `password: 123456123456`
 
 Note:
 - The `--platform linux/amd64` is a hard requirement.
-- If you receive a SNI error when accessing NiFi from your browser, verify the NIFI_HOST variable is set to your NiFi hostname or ip address.
+- If you receive a SNI error when accessing NiFi from your browser, verify the `NIFI_HOST` variable is set to your NiFi hostname or ip address.
+- NiFi should be accessible when the logs output `org.apache.nifi.web.server.JettyServer Started Server on https://abcdefghi:8443/nifi`
 
 ### Apache NiFi Install
 
