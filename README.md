@@ -41,45 +41,9 @@ There are two main options:
 - [Docker Run](#docker-run)
 - [Apache NiFi Install](#apache-nifi-install)
 
-### Docker Run
+### Quickstart with Docker
 
-```
-mkdir nifi_extensions
-cd nifi_extensions
-
-LATEST_RELEASE=$(python3 -c "import requests; print(requests.get('https://api.github.com/repos/vast-data/vastdb_nifi/releases/latest').json()['tag_name'].lstrip('v'))")
-wget -c https://github.com/vast-data/vastdb_nifi/releases/download/v${LATEST_RELEASE}/vastdb_nifi-${LATEST_RELEASE}-linux-x86_64-py39.nar
-
-# set this to the hostname or ip address where you are running NiFi
-NIFI_HOST=hostname_or_ipaddress
-
-docker run --name nifi \
-   -p 8443:8443 \
-   -d \
-   -e NIFI_WEB_PROXY_HOST=${NIFI_HOST} \
-   -e SINGLE_USER_CREDENTIALS_USERNAME=admin \
-   -e SINGLE_USER_CREDENTIALS_PASSWORD=123456123456 \
-   -v .:/opt/nifi/nifi-current/nar_extensions \
-   --platform linux/amd64 \
-   apache/nifi:2.0.0-M4
-```
-
-Wait a few minutes, then:
-- Open the URL: `https://hostname_or_ipaddress:8443`
-- username: `admin`
-- password: `123456123456`
-
-Note:
-- The `--platform linux/amd64` is a hard requirement.
-- If you receive a SNI error when accessing NiFi from your browser, verify the `NIFI_HOST` variable is set to your NiFi hostname or ip address.
-- NiFi should be accessible when the logs output `org.apache.nifi.web.server.JettyServer Started Server on https://abcdefghi:8443/nifi`
-
-### Apache NiFi Install
-
- - [NiFi Standard 2.0.0-M4](https://nifi.apache.org/download/) [or later] installed ([install docs](https://nifi.apache.org/docs/nifi-docs/html/getting-started.html#downloading-and-installing-nifi)).  The installation directory will be referred to as `$NIFI_HOME`.
- - Uncomment `nifi.python.command=python3` in `$NIFI_HOME/conf/nifi.properties`
- - Download the [nar file](https://github.com/vast-data/vastdb_nifi/releases/latest) for your platform and Python version
- - Add the nar file to `$NIFI_HOME/extensions`
+See here: https://vast-data.github.io/data-platform-field-docs/vast_database/nifi/quickstart.html
 
 ## Contributing
 
