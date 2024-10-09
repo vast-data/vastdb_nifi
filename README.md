@@ -34,14 +34,7 @@ This is a **community supported** project containing NiFi 2.0.0 Python Processor
 - Automatic database schema creation and table creation.
 - Automatic table schema discovery and table evolution.
 
-## Installation
-
-There are two main options:
-
-- [Docker Run](#docker-run)
-- [Apache NiFi Install](#apache-nifi-install)
-
-### Quickstart with Docker
+### Quickstart using Docker
 
 See here: https://vast-data.github.io/data-platform-field-docs/vast_database/nifi/quickstart.html
 
