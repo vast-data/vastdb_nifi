@@ -147,7 +147,7 @@ class PutVastDB(FlowFileTransform):
             raise RuntimeError(error_message) from e
 
     def read_json_array(self, flowfile):
-        json_str = "\n".join(json.dumps(item) for item in flowfile.getContentsAsBytes())
+        json_str = "\n".join(json.dumps(item) for item in json.loads(flowfile.getContentsAsBytes()))
         json_arr = json.loads(json_str)
         try:
             return pa_json.read_json(json_arr)
