@@ -1,4 +1,5 @@
 name: Release
+
 on:
   push:
     tags:
@@ -12,23 +13,36 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         python-version: ["3.9", "3.10", "3.11"]
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0 # Important for Hatch versioning
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install hatch hatchling
+
       - name: Check Formatting
         run: hatch fmt --check
+
       - name: Run tests
         run: hatch test
+
       - name: Build NAR
         run: hatch build -t custom
+
+      - name: Ensure dist directory exists
+        run: mkdir -p dist
+
+      - name: List built artifacts
+        run: ls -l dist
+
       - name: Upload NAR artifact
         uses: actions/upload-artifact@v4
         with:
@@ -41,10 +55,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Download NAR artifacts
+
+      - name: Download all NAR artifacts
         uses: actions/download-artifact@v4
         with:
           path: dist
+
+      - name: Verify downloaded artifacts
+        run: ls -l dist || echo "No artifacts found!"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
