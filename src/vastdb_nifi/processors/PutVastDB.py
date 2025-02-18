@@ -148,9 +148,8 @@ class PutVastDB(FlowFileTransform):
 
     def read_json_array(self, flowfile):
         json_str = "\n".join(json.dumps(item) for item in json.loads(flowfile.getContentsAsBytes()))
-        json_arr = json.loads(json_str)
         try:
-            return pa_json.read_json(json_arr)
+            return pa_json.read_json(json_str)
         except Exception as e:
             error_message = (
                 f"{e}.  Ensure your json is valid and meets pyarrow's requirements."
