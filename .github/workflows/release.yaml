@@ -31,7 +31,6 @@ jobs:
         run: hatch build -t custom
       - name: Upload NAR artifact
         uses: actions/upload-artifact@v4
-        overwrite: true
         with:
           name: nar-files-${{ matrix.os }}-${{ matrix.python-version }}
           path: dist/*.nar
