@@ -33,7 +33,7 @@ jobs:
         uses: actions/upload-artifact@v4
         overwrite: true
         with:
-          name: nar-files
+          name: nar-files-${{ matrix.os }}-${{ matrix.python-version }}
           path: dist/*.nar
 
   create-release:
