@@ -16,7 +16,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0 # Important for Hatch versioning
+          fetch-depth: 0
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -56,10 +56,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Download all NAR artifacts
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: dist
+          path: artifacts
+
+      - name: Move all NAR files to dist
+        run: |
+          mkdir -p dist
+          find artifacts -name "*.nar" -exec mv {} dist/ \;
 
       - name: Verify downloaded artifacts
         run: ls -l dist || echo "No artifacts found!"
