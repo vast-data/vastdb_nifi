@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 import io
-
+import json
 import pyarrow as pa
 import pyarrow.parquet as pq
 import vastdb
@@ -63,12 +63,25 @@ class PutVastDB(FlowFileTransform):
         self.incoming_data_type = PropertyDescriptor(
             name="Data Type",
             description=(
-                "Data Type.  Parquet or Json.\n"
-                "If Json, each data row must be on one line terminated by a newline character."
+                "Data Type.  Parquet, Json Array, or Json Line Delimited.\n"
+                "If Json Line Delimited, each data row is on one line terminated by a newline character."
             ),
-            allowable_values=["Parquet", "Json"],
+            allowable_values=["Parquet", "Json Array", "Json Line Delimited"],
             required=True,
             default_value="Parquet",
+        )
+
+        self.flatten_json = PropertyDescriptor(
+            name="Flatten Nested Json",
+            description=(
+                "Flatten Nested Json.\n"
+                "Each column with a struct type is flattened into one column per struct field.\n"
+                "Other columns are left unchanged.\n"
+                "Uses: pyarrow.Table.flatten()."
+            ),
+            allowable_values=["True", "False"],
+            required=True,
+            default_value="False",
         )
 
         self.descriptors = [
@@ -78,6 +91,7 @@ class PutVastDB(FlowFileTransform):
             self.vastdb_schema,
             self.vastdb_table,
             self.incoming_data_type,
+            self.flatten_json,
         ]
 
     # Processor properties
@@ -86,9 +100,18 @@ class PutVastDB(FlowFileTransform):
 
     def transform(self, context, flowfile):
         incoming_data_type = context.getProperty(self.incoming_data_type.name).getValue()
+        flatten_json = context.getProperty(self.flatten_json.name).getValue()
 
         session = self.get_vastdb_session(context)
-        pa_table = self.read_json(flowfile) if incoming_data_type == "Json" else self.read_parquet(flowfile)
+        if incoming_data_type == "Json Line Delimited":
+            pa_table = self.read_json(flowfile)
+        elif incoming_data_type == "Json Array":
+            pa_table = self.read_json_array(flowfile)
+        else:
+            pa_table = self.read_parquet(flowfile)
+            
+        if flatten_json == "True":
+            pa_table = pa_table.flatten()
 
         schema = pa_table.schema
 
@@ -118,6 +141,17 @@ class PutVastDB(FlowFileTransform):
         except Exception as e:
             error_message = (
                 f"{e}.  Ensure your parquet is valid and meets pyarrow's requirements."
+                f"\nSee: https://arrow.apache.org/docs/python/json.html#reading-json-files"
+            )
+            raise RuntimeError(error_message) from e
+
+    def read_json_array(self, flowfile):
+        json_data = '\n'.join(json.dumps(item) for item in flowfile.getContentsAsBytes())
+        try:
+            return pa_json.read_json(json_data)
+        except Exception as e:
+            error_message = (
+                f"{e}.  Ensure your json is valid and meets pyarrow's requirements."
                 f"\nSee: https://arrow.apache.org/docs/python/json.html#reading-json-files"
             )
             raise RuntimeError(error_message) from e
