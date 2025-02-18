@@ -109,7 +109,7 @@ class PutVastDB(FlowFileTransform):
             pa_table = self.read_json_array(flowfile)
         else:
             pa_table = self.read_parquet(flowfile)
-            
+
         if flatten_json == "True":
             pa_table = pa_table.flatten()
 
