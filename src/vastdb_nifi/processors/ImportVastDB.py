@@ -139,7 +139,7 @@ class ImportVastDB(FlowFileTransform):
             table: vastdb.table.Table = schema.table(vastdb_table, fail_if_missing=False)
             if table is None:
                 table = self.create_table_from_files(context, schema, vastdb_table, parquet_file_list)
-                
+
             # the following two lines are redundant and can be removed?
             else:
                 self.create_table_from_files(context, schema, vastdb_table, parquet_file_list, table.arrow_schema)
