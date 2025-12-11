@@ -5,6 +5,9 @@
 import ibis
 import yaml
 
+# If you prefer, import _ at module level so there are no local imports
+from ibis import _ as ibis_underscore
+
 ALLOWED_OPS = ["<", "<=", "==", ">", ">=", "!=", "isin", "isnull", "contains"]
 
 
@@ -41,7 +44,8 @@ def parse_yaml_predicate(yaml_str):
         data = data[0]
 
     def build_expression(predicate):
-        from ibis import _
+        # use the module-level alias instead of importing inside the function
+        _ = ibis_underscore
 
         if isinstance(predicate, dict):
             if "and" in predicate:
