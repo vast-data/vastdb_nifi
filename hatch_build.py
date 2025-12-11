@@ -12,9 +12,8 @@ import tempfile
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
-from shlex import quote
 from shutil import rmtree
-from subprocess import PIPE, check_call
+from subprocess import CalledProcessError, PIPE, run
 from typing import Any
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
@@ -73,7 +72,7 @@ class NarBundle:
 
         build_timestamp = current_timestamp.strftime(self.BUILD_TIMESTAMP_FORMAT)
 
-        from src.vastdb_nifi.processors._version import __version__
+        from src.vastdb_nifi.processors._version import __version__  # noqa: PLC0415
 
         manifest_lines = [
             "Manifest-Version: 1.0",
@@ -148,7 +147,7 @@ class CustomBuilder(BuilderInterface):
 
     def process_processor_file(self, file_path: Path) -> str:
         """Processes a processor file to replace version placeholders and returns the modified content."""
-        from src.vastdb_nifi.processors._version import __version__
+        from src.vastdb_nifi.processors._version import __version__  # noqa: PLC0415
 
         with open(file_path) as f:
             content = f.read()
@@ -193,17 +192,25 @@ class CustomBuilder(BuilderInterface):
             "-m",
             "pip",
             "install",
-            quote(dependency),
+            dependency,
             "--upgrade",
             "--no-python-version-warning",
             "--no-input",
             "--cache-dir",
-            quote(cache_dir),
+            cache_dir,
             "--quiet",
             "--target",
-            quote(str(directory.absolute())),
+            str(directory.absolute()),
         ]
-        check_call(install_arguments, stdout=PIPE, stderr=PIPE, shell=False)
+        result = run(install_arguments, stdout=PIPE, stderr=PIPE, check=False)
+        if result.returncode != 0:
+            stderr_output = result.stderr.decode() if result.stderr else "No error output"
+            raise CalledProcessError(
+                result.returncode,
+                install_arguments,
+                output=result.stdout,
+                stderr=f"pip install failed for {dependency}: {stderr_output}",
+            )
 
     def get_cache_dir(self, build_directory: str) -> str:
         return f"{build_directory}/pip-cache"
