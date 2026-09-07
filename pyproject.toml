@@ -84,6 +84,10 @@ lint.pep8-naming.extend-ignore-names = [
     "flowFile",
     "getPropertyDescriptors",
     "onScheduled",
+    # Required by http.server.BaseHTTPRequestHandler. Ignored here rather than with an
+    # inline noqa because ruff versions disagree: newer ruff exempts overridden methods
+    # and would flag the noqa as unused (RUF100), older ruff raises N802 without it.
+    "do_GET",
 ]
 lint.flake8-self.extend-ignore-names = [
     "_standard_validators"
