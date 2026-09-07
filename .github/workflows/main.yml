@@ -23,7 +23,10 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install hatch
+        # hatch 1.18.0 declares virtualenv>=21 but still calls
+        # virtualenv.discovery.builtin.propose_interpreters, which virtualenv 21
+        # removed, so environment creation fails. Pin until hatch fixes it upstream.
+        pip install hatch "virtualenv<21"
     - name: Check Formatting
       run: hatch fmt --check
     - name: Run tests
