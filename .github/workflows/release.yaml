@@ -26,7 +26,13 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install hatch hatchling
+          # Pin the build toolchain so every matrix cell lints with the same ruff.
+          # hatch dropped Python 3.9 at 1.16.0, so an unpinned install silently gives
+          # the 3.9 jobs an older hatch (and older ruff) than the rest, and the two
+          # disagree on rules such as N802. 1.15.1 is the newest hatch covering 3.9-3.11.
+          # virtualenv is capped because hatch calls
+          # virtualenv.discovery.builtin.propose_interpreters, which virtualenv 21 removed.
+          pip install "hatch==1.15.1" hatchling "virtualenv<21"
 
       - name: Check Formatting
         run: hatch fmt --check

@@ -23,8 +23,10 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
+  "cryptography==43.0.1",
   "pandas==2.2.2", 
   "pyarrow==16.1.0", 
+  "pyjks==20.0.0",
   "pyyaml==6.0.2", 
   "vastdb==v1.3.1", 
 ]
@@ -82,6 +84,10 @@ lint.pep8-naming.extend-ignore-names = [
     "flowFile",
     "getPropertyDescriptors",
     "onScheduled",
+    # Required by http.server.BaseHTTPRequestHandler. Ignored here rather than with an
+    # inline noqa because ruff versions disagree: newer ruff exempts overridden methods
+    # and would flag the noqa as unused (RUF100), older ruff raises N802 without it.
+    "do_GET",
 ]
 lint.flake8-self.extend-ignore-names = [
     "_standard_validators"

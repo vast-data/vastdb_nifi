@@ -29,10 +29,15 @@ This is a **community supported** project containing NiFi 2.0.0 Python Processor
 - **QueryVastDBTable**: Queries a Vast DataBase Table ([docs](./docs/QueryVastDBTable.md))
 - **UpdateVastDB**: Updates a Vast DataBase Table ([docs](./docs/UpdateVastDB.md))
 
+All processors share the same connection properties, documented in [TLS](./docs/TLS.md) for `https`
+endpoints.
+
 **Features**
 
 - Automatic database schema creation and table creation.
 - Automatic table schema discovery and table evolution.
+- TLS for `https` endpoints, including verification against a NiFi SSL Context Service truststore
+  ([docs](./docs/TLS.md)).
 
 ### Quickstart using Docker
 
