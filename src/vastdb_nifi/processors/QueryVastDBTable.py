@@ -81,6 +81,20 @@ class QueryVastDBTable(FlowFileTransform):
             default_value="False",
         )
 
+        self.data_endpoints = PropertyDescriptor(
+            name="Data Endpoints",
+            description=(
+                "Optional comma- or newline-separated list of VastDB data endpoint URLs used to "
+                "parallelize the query across CNodes; each endpoint is handled by its own worker "
+                "thread. When left empty the query is served only by the single 'VastDB Endpoint'. "
+                "Per VAST's load-balancing guidance you may list the same VIP-pool DNS name once per "
+                "VIP (e.g. the same https URL repeated 16 times for a 16-VIP pool). https endpoints "
+                "are verified using the same 'TLS Verification' setting as 'VastDB Endpoint'."
+            ),
+            required=False,
+            expression_language_scope=ExpressionLanguageScope.FLOWFILE_ATTRIBUTES,
+        )
+
         self.descriptors = [
             *self.connection.descriptors,
             self.vastdb_bucket,
@@ -89,6 +103,7 @@ class QueryVastDBTable(FlowFileTransform):
             self.vastdb_columns,
             self.vastdb_predicates,
             self.return_row_id,
+            self.data_endpoints,
         ]
 
     # Processor properties
@@ -120,6 +135,22 @@ class QueryVastDBTable(FlowFileTransform):
             return None
         return column_list
 
+    def extract_data_endpoints(self, context, flowfile):
+        data_endpoints_data = self.get_el_property(context, flowfile, self.data_endpoints.name)
+
+        # Nothing configured: fall back to the single 'VastDB Endpoint'.
+        if not data_endpoints_data:
+            return None
+
+        # Accept commas and/or newlines as separators, strip whitespace, drop blanks.
+        endpoints = [
+            endpoint.strip()
+            for line in data_endpoints_data.splitlines()
+            for endpoint in line.split(",")
+            if endpoint.strip()
+        ]
+        return endpoints or None
+
     def parse_bool_string(self, s):
         """Parses a "True" or "False" string into a Python bool.
 
@@ -145,6 +176,7 @@ class QueryVastDBTable(FlowFileTransform):
         vastdb_column_list = self.extract_column_list(context, flowfile)
         vastdb_predicate = self.get_el_property(context, flowfile, self.vastdb_predicates.name)
         vastdb_ret_row_id = self.parse_bool_string(context.getProperty(self.return_row_id.name).getValue())
+        vastdb_data_endpoints = self.extract_data_endpoints(context, flowfile)
 
         self.logger.info(f"Received predicate {vastdb_predicate}")
 
@@ -157,15 +189,27 @@ class QueryVastDBTable(FlowFileTransform):
             #         so the user doesn't have to manually specify.
             ibis_expr = parse_yaml_predicate(vastdb_predicate)
 
+            # Only build a QueryConfig when data endpoints are set; passing None keeps the
+            # SDK's default single-endpoint behaviour unchanged.
+            query_config = None
+            if vastdb_data_endpoints:
+                from vastdb.config import QueryConfig  # noqa: PLC0415
+
+                query_config = QueryConfig(data_endpoints=vastdb_data_endpoints)
+
             log_message = (
                 f"Selecting from table '{table.name}' columns '{vastdb_column_list}' "
-                f"with yaml: '{vastdb_predicate}' translated to ibis '{ibis_expr!s}'"
+                f"with yaml: '{vastdb_predicate}' translated to ibis '{ibis_expr!s}' "
+                f"across data endpoints '{vastdb_data_endpoints}'"
             )
             self.logger.info(log_message)
 
             try:
                 reader = table.select(
-                    columns=vastdb_column_list, predicate=ibis_expr, internal_row_id=vastdb_ret_row_id
+                    columns=vastdb_column_list,
+                    predicate=ibis_expr,
+                    config=query_config,
+                    internal_row_id=vastdb_ret_row_id,
                 )
                 table = reader.read_all()
                 df = table.to_pandas()

@@ -29,6 +29,7 @@ and:
 See [here](https://github.com/vast-data/vastdb_sdk/blob/main/docs/predicate.md) for the supported datatype values.
 
 * **Return internal row ID:** A boolean value indicating whether to include the internal row ID in the query results.
+* **Data Endpoints:** *(optional)* A comma- or newline-separated list of VastDB data endpoint URLs used to parallelize the query across CNodes — each endpoint is serviced by its own worker thread. When left empty, the query is served only by the single **VastDB Endpoint**. Following VAST's [load-balancing guidance](https://github.com/vast-data/vastdb_sdk/blob/main/README.md), you may list the same VIP-pool DNS name once per VIP (for example, the same `https` URL repeated 16 times for a 16-VIP pool). `https` endpoints are verified using the same **TLS Verification** setting as **VastDB Endpoint** — see [TLS](./TLS.md). This maps to the VastDB SDK's `QueryConfig.data_endpoints`. This property supports Expression Language referencing FlowFile attributes.
 
 **Supported Operators:**
 

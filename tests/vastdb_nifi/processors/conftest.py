@@ -47,6 +47,17 @@ class StandardValidators:
         return name
 
 
+class FlowFileTransform:
+    """Minimal stand-in for the NiFi FlowFileTransform base class."""
+
+
+class FlowFileTransformResult:
+    def __init__(self, relationship, contents=None, **kwargs):
+        self.relationship = relationship
+        self.contents = contents
+        self.attributes = kwargs.get("attributes")
+
+
 def _install_nifiapi_stub():
     if "nifiapi.properties" in sys.modules:
         return
@@ -59,8 +70,14 @@ def _install_nifiapi_stub():
     properties.StandardValidators = StandardValidators()
     nifiapi.properties = properties
 
+    flowfiletransform = types.ModuleType("nifiapi.flowfiletransform")
+    flowfiletransform.FlowFileTransform = FlowFileTransform
+    flowfiletransform.FlowFileTransformResult = FlowFileTransformResult
+    nifiapi.flowfiletransform = flowfiletransform
+
     sys.modules["nifiapi"] = nifiapi
     sys.modules["nifiapi.properties"] = properties
+    sys.modules["nifiapi.flowfiletransform"] = flowfiletransform
 
 
 _install_nifiapi_stub()
@@ -78,6 +95,12 @@ class FakePropertyValue:
 
     def asControllerService(self):  # noqa: N802 - mirrors the NiFi API
         return self._value
+
+    def isExpressionLanguagePresent(self):  # noqa: N802 - mirrors the NiFi API
+        return False
+
+    def evaluateAttributeExpressions(self, _flowfile=None):  # noqa: N802 - mirrors the NiFi API
+        return self
 
 
 class FakeProcessContext:
