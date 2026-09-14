@@ -6,9 +6,12 @@
 
 import json
 from typing import TYPE_CHECKING
+from urllib.parse import urlparse
 
 import pyarrow as pa
 import pyarrow.parquet as pq
+import requests
+from aws_requests_auth.aws_auth import AWSRequestsAuth
 from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
 from nifiapi.properties import PropertyDescriptor, StandardValidators
 from vastdb_session import VastDBConnection
@@ -22,6 +25,7 @@ class ImportVastDB(FlowFileTransform):
         implements = ["org.apache.nifi.python.processor.FlowFileTransform"]
 
     class ProcessorDetails:
+        # requests + aws_requests_auth are provided transitively by the vastdb SDK.
         dependencies = ["vastdb", "pyarrow", "cryptography", "pyjks"]
         version = "{{version}}"  # auto generated - do not edit
         tags = ["vastdb", "arrow"]
@@ -113,18 +117,17 @@ class ImportVastDB(FlowFileTransform):
 
             table: vastdb.table.Table = schema.table(vastdb_table, fail_if_missing=False)
             if table is None:
+                # New table: infer its schema from the source Parquet files (over verified TLS).
                 table = self.create_table_from_files(context, schema, vastdb_table, parquet_file_list)
-
-            # the following two lines are redundant and can be removed?
-            else:
-                self.create_table_from_files(context, schema, vastdb_table, parquet_file_list, table.arrow_schema)
+            # Existing table: import_files uses the table's own schema, so no client-side Parquet
+            # read is needed (the previous read here was redundant - its result was discarded).
 
             num_parquet_files = len(parquet_file_list)
             self.logger.info(f"Starting import of {num_parquet_files} files to table: {vastdb_table}")
             table.import_files(parquet_file_list)
             self.logger.info(f"Finished import of {num_parquet_files} files to table: {vastdb_table}")
 
-    def create_table_from_files(self, context, schema, table_name: str, parquet_file_list: list[str], pa_schema=None):
+    def create_table_from_files(self, context, schema, table_name: str, parquet_file_list: list[str]):
         vastdb_schema_merge_function = context.getProperty(self.schema_merge_function.name).getValue()
 
         if vastdb_schema_merge_function == "Strict":
@@ -135,28 +138,43 @@ class ImportVastDB(FlowFileTransform):
             schema_merge_function = self.union_schema_merge
 
         tx = schema.tx
-        current_schema = pa.schema([]) if pa_schema is None else pa_schema
-        s3fs = pa.fs.S3FileSystem(
-            access_key=tx._rpc.api.access_key, secret_key=tx._rpc.api.secret_key, endpoint_override=tx._rpc.api.url
-        )
-
+        current_schema = pa.schema([])
         for prq_file in parquet_file_list:
             if not prq_file.startswith("/"):
                 error_message = f"Path {prq_file} must start with a '/'"
                 raise ValueError(error_message)
-            parquet_ds = pq.ParquetDataset(prq_file.lstrip("/"), filesystem=s3fs)
-            current_schema = schema_merge_function(current_schema, parquet_ds.schema)
+            file_schema = self._read_parquet_schema(context, tx, prq_file)
+            current_schema = schema_merge_function(current_schema, file_schema)
 
-        if pa_schema is None:
-            try:
-                self.logger.info(f"Creating schema.table '{schema.name}.{table_name}'")
-                return schema.create_table(table_name, current_schema)
-            except Exception as e:
-                error_message = (
-                    f"Failed to create schema.table '{schema.name}.{table_name}' with pyarrow schema '{current_schema}'"
-                )
-                raise RuntimeError(error_message) from e
-        return None
+        try:
+            self.logger.info(f"Creating schema.table '{schema.name}.{table_name}'")
+            return schema.create_table(table_name, current_schema)
+        except Exception as e:
+            error_message = (
+                f"Failed to create schema.table '{schema.name}.{table_name}' with pyarrow schema '{current_schema}'"
+            )
+            raise RuntimeError(error_message) from e
+
+    def _read_parquet_schema(self, context, tx, prq_file: str) -> pa.Schema:
+        """Read a source Parquet file's schema over the Vast S3 endpoint.
+
+        pyarrow's S3FileSystem cannot be given a CA bundle and only trusts the OS store, so it
+        cannot verify a private-CA endpoint. Instead fetch the object with `requests` (SigV4
+        signed), passing the same `ssl_verify` the VastDB connection uses - so schema inference
+        honours the processor's TLS Verification setting exactly like the import RPC does.
+        """
+        endpoint = tx._rpc.api.url.rstrip("/")
+        ssl_verify = self.connection.resolve_ssl_verify(context) if endpoint.lower().startswith("https") else True
+        auth = AWSRequestsAuth(
+            aws_access_key=tx._rpc.api.access_key,
+            aws_secret_access_key=tx._rpc.api.secret_key,
+            aws_host=urlparse(endpoint).netloc,
+            aws_region="us-east-1",
+            aws_service="s3",
+        )
+        response = requests.get(f"{endpoint}{prq_file}", auth=auth, verify=ssl_verify, timeout=120)
+        response.raise_for_status()
+        return pq.read_schema(pa.BufferReader(response.content))
 
     def child_schema_merge(self, current_schema: pa.Schema, new_schema: pa.Schema) -> pa.Schema:
         """

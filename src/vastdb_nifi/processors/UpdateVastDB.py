@@ -159,8 +159,13 @@ class UpdateVastDB(FlowFileTransform):
         existing_fields = set(existing_schema.names)
         desired_fields = set(desired_schema.names)
 
+        # "$row_id" is VAST's reserved internal row identifier. The update payload carries it to
+        # locate the rows to update, but it is not a user column and must never be added as one -
+        # doing so raises TabularColumnNameConflict ("existing layout already has column $row_id").
+        reserved_fields = {"$row_id"}
+
         columns_to_add = []
-        for field_name in desired_fields - existing_fields:
+        for field_name in (desired_fields - existing_fields) - reserved_fields:
             field = desired_schema.field(field_name)
             # Create a new field with just the name and type of the original field
             single_column_field = pa.field(field_name, field.type)
