@@ -5,6 +5,7 @@
 import io
 from typing import TYPE_CHECKING
 
+import input_guard
 import pyarrow as pa
 import pyarrow.parquet as pq
 from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
@@ -62,12 +63,15 @@ class UpdateVastDB(FlowFileTransform):
             default_value="Parquet",
         )
 
+        self.max_input_size = input_guard.max_input_size_descriptor()
+
         self.descriptors = [
             *self.connection.descriptors,
             self.vastdb_bucket,
             self.vastdb_schema,
             self.vastdb_table,
             self.incoming_data_type,
+            self.max_input_size,
         ]
 
     # Processor properties
@@ -75,6 +79,11 @@ class UpdateVastDB(FlowFileTransform):
         return self.descriptors
 
     def transform(self, context, flowfile):
+        oversize = input_guard.oversize_reason(context, flowfile, self.max_input_size)
+        if oversize:
+            self.logger.warn(oversize)  # noqa: G010 - NiFi's logger exposes warn(), not warning()
+            return FlowFileTransformResult(relationship="failure", attributes={"vastdb.error": oversize})
+
         incoming_data_type = context.getProperty(self.incoming_data_type.name).getValue()
 
         session = self.get_vastdb_session(context)

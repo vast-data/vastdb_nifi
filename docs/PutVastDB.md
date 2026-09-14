@@ -20,5 +20,32 @@
 {"a": 1, "b": 2.0, "c": "foo", "d": false}
 {"a": 4, "b": -5.5, "c": null, "d": true}
 ```
+
+   * **Max Input Size:** *(optional)* A data-size ceiling on the incoming FlowFile's content, e.g.
+     `500 MB` or `2 GB`. Leave it empty to disable the check (the default).
+
+### Guarding against large inputs
+
+PutVastDB reads the **entire** FlowFile into memory (`getContentsAsBytes`) and decodes it into an
+in-memory Arrow table before writing. A large enough FlowFile therefore exhausts the NiFi Python
+process and gets it **OOM-killed** — an unrecoverable crash of the Python side, not a routed failure.
+(The write itself is safe: the `vastdb` SDK already splits the insert into small RPCs, so the limit is
+client-side memory, not a server limit.)
+
+**Max Input Size** turns that crash into a routed FlowFile. When set, if the FlowFile's content size
+exceeds the limit, the FlowFile is routed to **failure** with a `vastdb.error` attribute **before any
+content is read** (the check uses the FlowFile's size metadata only — it never calls
+`getContentsAsBytes`). It is deliberately **operator-set and not inferred**: the safe size depends on
+the node's Python memory budget, its concurrency, and the format's decode expansion, none of which the
+processor can reliably know. Note the value is compared against the **on-disk** size, which for Parquet
+is much smaller than the decoded size — set it conservatively. Treat it as a safety tripwire, not a
+precise memory gauge.
+
+For **bulk loads**, don't rely on the guard — keep the large payload out of the Python process
+entirely: split upstream (e.g. [SplitRecord](https://nifi.apache.org/docs/nifi-docs/components/org.apache.nifi/nifi-standard-nar/2.0.0-M4/org.apache.nifi.processors.standard.SplitRecord/index.html),
+which streams on the JVM side and does not load the whole content into heap) so each FlowFile is a
+bounded size, or use [ImportVastDB](./ImportVastDB.md), where VAST reads the Parquet **server-side** and
+nothing is materialised in the Python process.
+
   **Note:**
    * Processors with *Record Writers* can use the [JsonRecordSetWriter](https://nifi.apache.org/docs/nifi-docs/components/org.apache.nifi/nifi-record-serialization-services-nar/2.0.0-M4/org.apache.nifi.json.JsonRecordSetWriter/index.html) that has the **Output Grouping** property set to **One Line Per Object** will create the FlowFile with the correct format.
