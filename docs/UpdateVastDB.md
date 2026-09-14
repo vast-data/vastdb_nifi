@@ -17,4 +17,22 @@
 {"a": 1, "b": 2.0, "c": "foo", "d": false, "$row_id": 12345}
 {"a": 4, "b": -5.5, "c": null, "d": true, "$row_id": 23456}
 ```
+
+   * **Max Input Size:** *(optional)* A data-size ceiling on the incoming FlowFile's content, e.g.
+     `500 MB` or `2 GB`. Leave it empty to disable the check (the default).
+
+### Guarding against large inputs
+
+UpdateVastDB reads the **entire** FlowFile into memory (`getContentsAsBytes`) and decodes it into an
+in-memory Arrow table before writing, so a large enough FlowFile can exhaust the NiFi Python process and
+get it **OOM-killed** — an unrecoverable crash rather than a routed failure. When **Max Input Size** is
+set, a FlowFile whose content exceeds it is routed to **failure** with a `vastdb.error` attribute
+**before any content is read** (the check uses the FlowFile's size metadata only). It is deliberately
+**operator-set and not inferred** — the safe size depends on the node's Python memory budget, its
+concurrency, and the format's decode expansion — and it is compared against the **on-disk** size (for
+Parquet much smaller than the decoded size), so set it conservatively; treat it as a safety tripwire,
+not a precise memory gauge. For large updates, split the input upstream (e.g.
+[SplitRecord](https://nifi.apache.org/docs/nifi-docs/components/org.apache.nifi/nifi-standard-nar/2.0.0-M4/org.apache.nifi.processors.standard.SplitRecord/index.html))
+so each FlowFile is a bounded size.
+
 * **Note:** Processors with *Record Writers* can use the [JsonRecordSetWriter](https://nifi.apache.org/docs/nifi-docs/components/org.apache.nifi/nifi-record-serialization-services-nar/2.0.0-M4/org.apache.nifi.json.JsonRecordSetWriter/index.html) that has the **Output Grouping** property set to **One Line Per Object** will create the FlowFile with the correct format. 
