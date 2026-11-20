@@ -167,3 +167,20 @@ plain HTTP; `Flatten Nested Json`, `Max Input Size`, `Schema Merge = Strict|Chil
    SDK bumps are exercised through NiFi before a NAR is published.
 3. Re-run the TLS matrix from [tls-test-report.md](./tls-test-report.md) once on 2.4.0, since `_read_parquet_schema`
    is also the TLS-sensitive path in ImportVastDB.
+
+## Re-test with the ImportVastDB fix (#18)
+
+Same cluster, NiFi image, bucket and schema. The v2.0.0 NAR was replaced by the Build artifact from the fix
+branch (`vastdb_nifi-0.1.dev1+g200a2726a-linux-x86_64-py311.nar`, commit `200a272`, the commit merged in #18),
+and the container restarted. NiFi discovered all six processors from the new bundle with zero `ERROR` lines.
+
+| Step | Processor | Result |
+|---|---|:--:|
+| Import into a table that does not exist yet (`Schema Merge = Union`) | ImportVastDB | ✅ PASS - routed to `success`, no bulletins |
+| Query the new table | QueryVastDBTable | ✅ PASS - the 4 imported rows |
+| Seed a second table with one row | PutVastDB | ✅ PASS |
+| Import into that existing table | ImportVastDB | ✅ PASS |
+| Query the existing table | QueryVastDBTable | ✅ PASS - 5 rows (4 imported + 1 seeded) |
+| Drop both tables | DropVastDBTable | ✅ PASS |
+
+With the fix, all six processors pass end-to-end on the vastdb 2.4.0 build. The fix ships in v2.0.1.
