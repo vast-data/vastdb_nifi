@@ -36,9 +36,10 @@ class VastDBConnection:
 
     A processor creates one of these in its constructor, splices `descriptors` into the
     list it returns from `getPropertyDescriptors`, and calls `connect` to obtain a
-    session. `resolve_ssl_verify` exposes the same verification setting so a processor
-    that opens its own connection (e.g. ImportVastDB reading a Parquet source over S3)
-    verifies exactly the way the database connection does.
+    session. `resolve_endpoint`, `resolve_credentials` and `resolve_ssl_verify` expose the
+    same endpoint, keys and verification setting so a processor that makes its own request
+    to the endpoint (e.g. ImportVastDB reading a Parquet source over S3) uses exactly what
+    the database connection uses, without depending on the SDK session's private state.
     """
 
     def __init__(self):
@@ -99,9 +100,8 @@ class VastDBConnection:
 
     def connect(self, context, logger):
         """Open a VastDB session using the configured endpoint, credentials and TLS settings."""
-        endpoint = context.getProperty(self.endpoint.name).getValue()
-        credentials_provider_service = context.getProperty(self.credentials_provider_service.name).asControllerService()
-        credentials = credentials_provider_service.getAwsCredentialsProvider().resolveCredentials()
+        endpoint = self.resolve_endpoint(context)
+        access_key, secret_key = self.resolve_credentials(context)
 
         tls_kwargs = {}
         if endpoint.lower().startswith("https"):
@@ -110,8 +110,8 @@ class VastDBConnection:
         try:
             session = vastdb.connect(
                 endpoint=endpoint,
-                access=credentials.accessKeyId(),
-                secret=credentials.secretAccessKey(),
+                access=access_key,
+                secret=secret_key,
                 **tls_kwargs,
             )
             logger.info("Connected to VastDB")
@@ -120,6 +120,22 @@ class VastDBConnection:
             raise RuntimeError(error_message) from e
         else:
             return session
+
+    def resolve_endpoint(self, context) -> str:
+        """Return the configured VastDB endpoint URL."""
+        return context.getProperty(self.endpoint.name).getValue()
+
+    def resolve_credentials(self, context):
+        """Return the (access key, secret key) pair from the configured credentials provider service.
+
+        `connect` uses this for the SDK session, and a processor that must sign its own S3
+        request (ImportVastDB reading a Parquet schema) uses it too, so every request to the
+        endpoint is made with the same identity. Reading the keys back out of the SDK session
+        is not an option: its private attributes changed between vastdb 1.x and 2.x.
+        """
+        credentials_provider_service = context.getProperty(self.credentials_provider_service.name).asControllerService()
+        credentials = credentials_provider_service.getAwsCredentialsProvider().resolveCredentials()
+        return credentials.accessKeyId(), credentials.secretAccessKey()
 
     def resolve_ssl_verify(self, context):
         """Return the `ssl_verify` value for the configured mode: False, True, or a PEM CA path.

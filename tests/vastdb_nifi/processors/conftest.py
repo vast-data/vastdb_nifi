@@ -113,6 +113,30 @@ class FakeProcessContext:
         return FakePropertyValue(self._properties.get(name))
 
 
+FAKE_ACCESS_KEY = "AKIATESTACCESSKEY"
+FAKE_SECRET_KEY = "test-secret-key"
+
+
+class FakeCredentialsProviderService:
+    """Stands in for the py4j proxy of an AWSCredentialsProviderControllerService.
+
+    The processors call `getAwsCredentialsProvider().resolveCredentials()` and then read
+    `accessKeyId()` / `secretAccessKey()`; one object plays all three roles.
+    """
+
+    def getAwsCredentialsProvider(self):  # noqa: N802 - mirrors the NiFi API
+        return self
+
+    def resolveCredentials(self):  # noqa: N802 - mirrors the AWS SDK API
+        return self
+
+    def accessKeyId(self):  # noqa: N802 - mirrors the AWS SDK API
+        return FAKE_ACCESS_KEY
+
+    def secretAccessKey(self):  # noqa: N802 - mirrors the AWS SDK API
+        return FAKE_SECRET_KEY
+
+
 class FakeSSLContextService:
     """Stands in for the py4j proxy of an SSLContextService controller service."""
 
