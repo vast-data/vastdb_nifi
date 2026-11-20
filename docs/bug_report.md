@@ -15,7 +15,7 @@
   ```
 
 ### Python Environment
-- **Python Version:** <!-- e.g., 3.9.18, 3.10.12, 3.11.5 -->
+- **Python Version:** <!-- e.g., 3.10.14, 3.11.9, 3.12.3 -->
   ```bash
   python3 --version
   ```
@@ -29,7 +29,7 @@
   ```
 
 ### NAR File
-- **NAR Filename:** <!-- Full filename, e.g., vastdb-nifi-1.0.0-linux-x86_64-py39.nar -->
+- **NAR Filename:** <!-- Full filename, e.g., vastdb-nifi-1.3.2-linux-x86_64-py311.nar -->
 - **NAR Source:** <!-- Where did you get it? GitHub release, built locally, etc. -->
   ```bash
   ls -lh $NIFI_HOME/lib/*vastdb*.nar

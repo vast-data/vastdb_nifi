@@ -7,7 +7,7 @@ name = "vastdb-nifi"
 dynamic = ["version"]
 description = 'VastDB NiFi Processors.'
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "MIT"
 keywords = []
 authors = [
@@ -16,19 +16,19 @@ authors = [
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
   "cryptography==50.0.1",
   "pandas==2.2.2",
-  "pyarrow==16.1.0",
+  "pyarrow==23.0.1",
   "pyjks==20.0.0",
   "pyyaml==6.0.2",
-  "vastdb==v1.3.1",
+  "vastdb==2.4.0",
 ]
 
 [project.urls]

@@ -27,7 +27,7 @@ This is a **community supported** project containing NiFi 2.0.0 Python Processor
 ### Prerequisites
 
 - [NiFi Standard 2.0.0-M4](https://nifi.apache.org/download/) [or later] installed
-- Python 3.9+
+- Python 3.10+
 
 ### Installation
 
