@@ -2,8 +2,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-# ruff: noqa: SLF001
-
 import json
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
@@ -137,13 +135,12 @@ class ImportVastDB(FlowFileTransform):
         else:
             schema_merge_function = self.union_schema_merge
 
-        tx = schema.tx
         current_schema = pa.schema([])
         for prq_file in parquet_file_list:
             if not prq_file.startswith("/"):
                 error_message = f"Path {prq_file} must start with a '/'"
                 raise ValueError(error_message)
-            file_schema = self._read_parquet_schema(context, tx, prq_file)
+            file_schema = self._read_parquet_schema(context, prq_file)
             current_schema = schema_merge_function(current_schema, file_schema)
 
         try:
@@ -155,19 +152,25 @@ class ImportVastDB(FlowFileTransform):
             )
             raise RuntimeError(error_message) from e
 
-    def _read_parquet_schema(self, context, tx, prq_file: str) -> pa.Schema:
+    def _read_parquet_schema(self, context, prq_file: str) -> pa.Schema:
         """Read a source Parquet file's schema over the Vast S3 endpoint.
 
         pyarrow's S3FileSystem cannot be given a CA bundle and only trusts the OS store, so it
         cannot verify a private-CA endpoint. Instead fetch the object with `requests` (SigV4
         signed), passing the same `ssl_verify` the VastDB connection uses - so schema inference
         honours the processor's TLS Verification setting exactly like the import RPC does.
+
+        The endpoint and keys come from the processor's own properties, the same ones the SDK
+        session is opened with. An earlier version read them back out of the session's private
+        attributes, which vastdb 2.x removed, so every import that had to create its table
+        failed before the import RPC was ever reached.
         """
-        endpoint = tx._rpc.api.url.rstrip("/")
+        endpoint = self.connection.resolve_endpoint(context).rstrip("/")
+        access_key, secret_key = self.connection.resolve_credentials(context)
         ssl_verify = self.connection.resolve_ssl_verify(context) if endpoint.lower().startswith("https") else True
         auth = AWSRequestsAuth(
-            aws_access_key=tx._rpc.api.access_key,
-            aws_secret_access_key=tx._rpc.api.secret_key,
+            aws_access_key=access_key,
+            aws_secret_access_key=secret_key,
             aws_host=urlparse(endpoint).netloc,
             aws_region="us-east-1",
             aws_service="s3",

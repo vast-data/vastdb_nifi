@@ -14,6 +14,7 @@ import threading
 import pytest
 import requests
 
+from vastdb_nifi.processors import vastdb_session as vastdb_session_module
 from vastdb_nifi.processors.vastdb_session import (
     TLS_CA_CERTIFICATE_FILE,
     TLS_NO_VERIFICATION,
@@ -22,7 +23,7 @@ from vastdb_nifi.processors.vastdb_session import (
 )
 
 from . import certs
-from .conftest import FakeProcessContext
+from .conftest import FAKE_ACCESS_KEY, FAKE_SECRET_KEY, FakeCredentialsProviderService, FakeProcessContext
 
 HTTPS_ENDPOINT = "https://vastdb.example.com"
 
@@ -95,6 +96,35 @@ def test_descriptors_are_ordered_with_the_connection_first(connection):
         connection.credentials_provider_service,
         connection.tls_verification,
         connection.ca_certificate_file,
+    ]
+
+
+# --------------------------------------------------------------------------------------
+# Endpoint and credentials come from the properties, for the SDK session and S3 alike
+# --------------------------------------------------------------------------------------
+
+
+def test_endpoint_and_credentials_resolve_from_the_properties(connection):
+    context = FakeProcessContext({
+        connection.endpoint.name: "http://vip.example.com:9090",
+        connection.credentials_provider_service.name: FakeCredentialsProviderService(),
+    })
+    assert connection.resolve_endpoint(context) == "http://vip.example.com:9090"
+    assert connection.resolve_credentials(context) == (FAKE_ACCESS_KEY, FAKE_SECRET_KEY)
+
+
+def test_connect_opens_the_sdk_session_with_the_resolved_values(connection, monkeypatch, logger):
+    calls = []
+    monkeypatch.setattr(vastdb_session_module.vastdb, "connect", lambda **kwargs: calls.append(kwargs) or "session")
+    context = FakeProcessContext({
+        connection.endpoint.name: HTTPS_ENDPOINT,
+        connection.credentials_provider_service.name: FakeCredentialsProviderService(),
+        connection.tls_verification.name: TLS_NO_VERIFICATION,
+    })
+
+    assert connection.connect(context, logger) == "session"
+    assert calls == [
+        {"endpoint": HTTPS_ENDPOINT, "access": FAKE_ACCESS_KEY, "secret": FAKE_SECRET_KEY, "ssl_verify": False}
     ]
 
 
